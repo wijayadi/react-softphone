@@ -388,6 +388,19 @@ npm install ../react-softphone/react-softphone-*.tgz
 
 ```
 
+### End-to-end tests
+
+Playwright end-to-end tests live in `e2e/`. They run the real component in a
+browser through a small Vite harness (`e2e/harness`) with a fake SIP-over-
+WebSocket (`e2e/fake-sip.js`), so no SIP server is required. They cover dial
+target parsing (e.g. `1000@10.13.13.77` is not double-suffixed), the outgoing
+INVITE URI, and that call/media failures are surfaced to the console and UI.
+
+```bash
+# Uses the locally installed Google Chrome (channel: 'chrome')
+npm run test:e2e
+```
+
 ## 📄 License
 
 ISC © [chamuridis](https://github.com/chamuridis)

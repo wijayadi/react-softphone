@@ -62,3 +62,40 @@ export const debugWarn = (message, ...args) => {
     console.warn(`[SoftPhone] ${message}`, ...args);
   }
 };
+
+// Always-on loggers. Errors must always be visible so call failures are not
+// silent; informational logs help trace the connection/call flow without
+// needing window.__SOFTPHONE_DEBUG__.
+const PRE = '[SoftPhone]';
+
+export const logInfo = (message, ...args) => {
+  console.log(`${PRE} ${message}`, ...args);
+};
+
+export const logWarn = (message, ...args) => {
+  console.warn(`${PRE} ${message}`, ...args);
+};
+
+export const logError = (message, ...args) => {
+  console.error(`${PRE} ${message}`, ...args);
+};
+
+// Build a human readable description of a JsSIP session/UA event payload.
+export const describeSipEvent = (data) => {
+  if (!data || typeof data !== 'object') {
+    return { originator: 'unknown', cause: String(data ?? ''), response: '' };
+  }
+  const originator = data.originator || 'unknown';
+  const cause = data.cause || 'unknown';
+  const responseMessage = data.message && data.message.status_code
+    ? data.message
+    : data.response && data.response.status_code
+      ? data.response
+      : null;
+  const response = responseMessage
+    ? `${responseMessage.status_code} ${
+        responseMessage.reason_phrase || ''
+      }`.trim()
+    : '';
+  return { originator, cause, response };
+};

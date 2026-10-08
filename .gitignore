@@ -18,3 +18,9 @@ yarn-debug.log*
 yarn-error.log*
 /.idea
 *.tgz
+
+# test artifacts
+test-results
+playwright-report
+blob-report
+.playwright

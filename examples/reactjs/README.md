@@ -12,14 +12,26 @@ The component is **referenced by path** – it is *not* installed from npm:
 }
 ```
 
-pnpm materialises the package from the local path (and points the component's
-`react` / `react-dom` at this app's copies, so there is a single React
-instance).
+In addition, `vite.config.js` aliases `react-softphone` straight to the
+component **source** and dedupes React:
 
-## 1. Build the component
+```js
+resolve: {
+  alias: { 'react-softphone': path.resolve(dirname, '../../src/index.jsx') },
+  dedupe: ['react', 'react-dom'],
+},
+optimizeDeps: { exclude: ['react-softphone'] },
+```
 
-Because the package publishes its built output from `dist/`, build the root
-package once (and again after changing the component source):
+This means the example always runs the current component source with instant
+HMR. There is no need to rebuild `dist/`, and Vite never serves a stale
+pre-bundled copy of the package (which is what happens when a `file:`
+dependency's contents change without its version changing).
+
+## 1. (Optional) Build the component
+
+Not required for this example because Vite consumes the source directly. Build
+the root package only if you need `dist/` for another consumer:
 
 ```bash
 # from the repository root (/data/sengsara/react-softphone)
@@ -61,6 +73,9 @@ pnpm build && pnpm preview
 
 ## How it works
 
+- `vite.config.js` – aliases `react-softphone` to `../../src/index.jsx` (the
+  component source) and dedupes React, so dev/build always use the current
+  component.
 - `src/App.jsx` – builds the SIP config from `import.meta.env`, keeps the
   volume/notification/auto-connect preferences in `localStorage`, and renders
   the imported `react-softphone` component via the built-in launcher and an

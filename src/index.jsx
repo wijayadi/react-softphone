@@ -29,7 +29,8 @@ import SwipeCaruselBodyBlock from './phoneBlocks/SwipeCaruselBodyBlock';
 import StatusBlock from './phoneBlocks/status-block';
 import CallQueue from './phoneBlocks/call-queue';
 import CallsFlowControl from './CallsFlowControl';
-import { NOTIFICATION_DEFAULTS, debugLog, debugError, debugWarn, hasNotificationAPI, isBrowser } from './constants';
+import { NOTIFICATION_DEFAULTS, debugLog, debugError, debugWarn, hasNotificationAPI, isBrowser, logInfo, logWarn, logError } from './constants';
+import { parseDialTarget } from './utils/dial';
 
 const flowRoute = new CallsFlowControl();
 
@@ -319,8 +320,10 @@ function SoftPhone({
     // Listen Here for Engine "UA jssip" events
     switch (event) {
       case 'connecting':
+        logInfo('SIP transport connecting…', payload);
         break;
       case 'connected':
+        logInfo('SIP transport connected');
         setLocalStatePhone((prevState) => ({
           ...prevState,
           connectingPhone: false,
@@ -328,8 +331,13 @@ function SoftPhone({
         }));
         break;
       case 'registered':
+        logInfo('SIP registration succeeded', payload && payload.response);
+        break;
+      case 'unregistered':
+        logWarn('SIP unregistered', payload && payload.response);
         break;
       case 'disconnected':
+        logWarn('SIP transport disconnected', payload);
         setLocalStatePhone((prevState) => ({
           ...prevState,
           connectingPhone: false,
@@ -337,6 +345,12 @@ function SoftPhone({
         }));
         break;
       case 'registrationFailed':
+        logError(
+          `SIP registration failed: ${(payload && payload.response && payload.response.status_code) || ''} ${
+            (payload && payload.response && payload.response.reason_phrase) || (payload && payload.cause) || ''
+          }`.trim(),
+          payload
+        );
         break;
 
       default:
@@ -667,10 +681,14 @@ function SoftPhone({
     }));
     if (flowRoute) {
       if (connectionStatus === true) {
+        logInfo('User requested connect');
         flowRoute.start();
       } else {
+        logInfo('User requested disconnect');
         flowRoute.stop();
       }
+    } else {
+      logError('Cannot change connection: flowRoute is not available');
     }
 
 
@@ -715,10 +733,21 @@ function SoftPhone({
   };
 
   const handleCall = (event) => {
-    event.persist();
-    if (dialState.match(/^[0-9]+$/) != null && flowRoute) {
-      flowRoute.call(dialState);
+    if (event && typeof event.persist === 'function') {
+      event.persist();
     }
+    if (!flowRoute) {
+      logError('Cannot place call: flowRoute is not available');
+      return;
+    }
+    const target = parseDialTarget(dialState, config && config.domain);
+    logInfo('Dial submit', { input: dialState, target });
+    if (!target.valid) {
+      logError(`Invalid dial input "${dialState}": ${target.reason}`);
+      notify(`Invalid number: ${target.reason}`);
+      return;
+    }
+    flowRoute.call(dialState);
   };
 
   const handleEndCall = (event) => {

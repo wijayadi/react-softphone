@@ -1,6 +1,35 @@
 import { UA, debug } from 'jssip';
 import _ from 'lodash';
-import { debugLog, debugError, debugWarn } from './constants';
+import { debugLog, debugError, debugWarn, logInfo, logWarn, logError, describeSipEvent } from './constants';
+import { parseDialTarget } from './utils/dial';
+
+// Map common SIP failure responses to actionable messages.
+const FRIENDLY_SIP_FAILURES = {
+  400: 'the server rejected the request (400 Bad Request)',
+  401: 'authentication required (401 Unauthorized)',
+  403: 'forbidden by the server (403 Forbidden)',
+  404: 'number not found (404 Not Found)',
+  408: 'no answer / request timed out (408)',
+  480: 'callee temporarily unavailable (480)',
+  486: 'callee is busy (486 Busy Here)',
+  487: 'call was cancelled (487)',
+  488: 'the server rejected the media/SDP (488 Not Acceptable Here) — check that the extension is enabled for WebRTC/DTLS and supports the offered codecs',
+  500: 'server error (500)',
+  503: 'service unavailable (503)',
+  603: 'call was declined (603 Declined)',
+};
+
+const friendlyFailure = (info) => {
+  if (info.cause === 'User Denied Media Access') {
+    return 'microphone access was denied';
+  }
+  const match = info.response ? String(info.response).match(/^(\d{3})/) : null;
+  const code = match ? Number(match[1]) : null;
+  if (code && FRIENDLY_SIP_FAILURES[code]) {
+    return FRIENDLY_SIP_FAILURES[code];
+  }
+  return `${info.cause}${info.response ? ` (${info.response})` : ''}`;
+};
 
 function CallsFlowControl() {
   this.onUserAgentAction = () => {};
@@ -57,6 +86,7 @@ function CallsFlowControl() {
   this.connectedPhone = null;
   this.config = {};
   this.initiated = false;
+  this.mediaErrorNotified = false;
   this.playRing = () => {
     if (this.ringer && this.ringer.current) {
       try {
@@ -117,30 +147,27 @@ function CallsFlowControl() {
   };
 
   this.sessionEvent = (type, data, cause, callId) => {
-    // console.log(`Session: ${type}`);
-    // console.log('Data: ', data);
-    // console.log('callid: ', callId);
-
     switch (type) {
       case 'terminated':
-        //  this.endCall(data, cause);
+        debugLog(`Call ${callId} terminated`);
         break;
-      case 'progress':
-        if (data.originator === 'remote') {
+      case 'progress': {
+        const status = data && data.response ? data.response.status_code : undefined;
+        const reasonPhrase = data && data.response ? data.response.reason_phrase : '';
+        logInfo(`Call ${callId} progress: ${status || ''} ${reasonPhrase || ''} (${(data && data.originator) || 'unknown'})`);
+        if (data && data.originator === 'remote') {
           // Play ringback tone for outgoing calls only
-          if (data.response.status_code === 180) {
+          if (status === 180) {
             this.startRingback();
           }
-          if (data.response.status_code === 183) {
+          if (status === 183) {
             this.stopRingback();
           }
-        } else {
-          // Do nothing for incoming calls
-          console.log('Progress event for incoming call, ignoring...');
         }
         break;
+      }
       case 'accepted':
-        // this.startCall(data);
+        logInfo(`Call ${callId} accepted`);
         break;
       case 'reinvite':
         this.onCallActionConnection('reinvite', callId, data);
@@ -163,6 +190,7 @@ function CallsFlowControl() {
       case 'unmuted':
         break;
       case 'confirmed':
+        logInfo(`Call ${callId} confirmed (media established)`);
         this.stopRingback();
         if (!this.activeCall) {
           this.activeCall = _.find(this.callsQueue, { id: callId });
@@ -171,8 +199,40 @@ function CallsFlowControl() {
         this.onCallActionConnection('callAccepted', callId, this.activeCall);
         break;
       case 'connecting':
+        debugLog(`Call ${callId} connecting...`);
         break;
-      case 'ended':
+      case 'sending':
+        debugLog(`Call ${callId} sending...`);
+        break;
+      case 'peerconnection':
+      case 'sdp':
+      case 'icecandidate':
+      case 'update':
+        debugLog(`Call ${callId} ${type}`);
+        break;
+      case 'getusermediafailed': {
+        const err = data || {};
+        logError(
+          `getUserMedia failed for call ${callId}: ${err.name || 'Error'}${
+            err.message ? ` - ${err.message}` : ''
+          }`,
+          err
+        );
+        this.notify(
+          `Microphone access failed: ${err.name || 'Error'}. Allow microphone access (and serve the app over HTTPS or localhost), then try again.`
+        );
+        // JsSIP emits 'failed' right after this with cause
+        // "User Denied Media Access"; avoid notifying twice.
+        this.mediaErrorNotified = true;
+        break;
+      }
+      case 'ended': {
+        const info = describeSipEvent(data);
+        logInfo(
+          `Call ${callId} ended (${info.originator}) cause=${info.cause}${
+            info.response ? ` response=${info.response}` : ''
+          }`
+        );
         this.onCallActionConnection('callEnded', callId);
         this.removeCallFromQueue(callId);
         this.removeCallFromActiveCall(callId);
@@ -181,7 +241,18 @@ function CallsFlowControl() {
           this.stopRing();
         }
         break;
-      case 'failed':
+      }
+      case 'failed': {
+        const info = describeSipEvent(data);
+        const responseSuffix = info.response ? ` (${info.response})` : '';
+        logError(
+          `Call ${callId} FAILED (${info.originator}) cause=${info.cause}${responseSuffix}`,
+          data
+        );
+        if (!this.mediaErrorNotified) {
+          this.notify(`Call failed: ${friendlyFailure(info)}`);
+        }
+        this.mediaErrorNotified = false;
         this.stopRingback();
         this.onCallActionConnection('callEnded', callId);
         this.removeCallFromQueue(callId);
@@ -190,8 +261,9 @@ function CallsFlowControl() {
           this.stopRing();
         }
         break;
+      }
       default:
-        // console.warn(`Unhandled event: ${type}`, { data, cause, callId });
+        debugLog(`Call ${callId} event: ${type}`, data);
         break;
     }
   };
@@ -241,13 +313,33 @@ function CallsFlowControl() {
   };
 
   this.validateConfig = () => {
-    if (!this.config.domain) {
-      console.warn('Config error: Missing domain');
+    const problems = [];
+    if (!this.config.domain) problems.push('missing domain');
+    if (!this.config.uri) problems.push('missing uri');
+    if (!this.config.ws_servers) problems.push('missing ws_servers');
+    if (problems.length) {
+      logError(`Invalid SIP configuration: ${problems.join(', ')}`, {
+        domain: this.config.domain,
+        uri: this.config.uri,
+        ws_servers: this.config.ws_servers
+      });
     }
   };
   this.init = () => {
     try {
       this.validateConfig();
+      if (this.phone) {
+        // React StrictMode (and remounts) can run the mount effect twice.
+        // Reuse the existing UA instead of creating a second transport.
+        logInfo('JsSIP UA already initialized, reusing existing instance');
+        this.initiated = true;
+        return;
+      }
+      logInfo('Initializing JsSIP UA', {
+        domain: this.config.domain,
+        uri: this.config.uri,
+        ws_servers: this.config.ws_servers
+      });
       this.phone = new UA(this.config);
       this.phone.on('newRTCSession', this.handleNewRTCSession.bind(this));
       const binds = [
@@ -267,31 +359,48 @@ function CallsFlowControl() {
       });
       this.initiated = true;
     } catch (e) {
-      console.log(e);
+      logError('Failed to initialize JsSIP UA', e);
     }
   };
 
   this.call = (to) => {
+    const target = parseDialTarget(to, this.config.domain);
+    logInfo('call() requested', { input: to, target });
+
+    if (!target.valid) {
+      logError(`Invalid dial target "${to}": ${target.reason}`);
+      this.notify(`Invalid number: ${target.reason}`);
+      return;
+    }
+
     if (!this.connectedPhone) {
+      logError('Cannot place call: not connected to the VoIP server');
       this.notify('Please connect to VoIP server first');
-      console.log('User agent not registered yet');
       return;
     }
+
+    if (!this.phone) {
+      logError('Cannot place call: the phone (UA) has not been initialized');
+      this.notify('Phone is not initialized');
+      return;
+    }
+
     if (this.activeCall) {
+      logWarn('Cannot place call: an active call already exists');
       this.notify('Active call already exists');
-      console.log('Already has active call');
       return;
     }
-    this.phone.call(`sip:${to}@${this.config.domain}`, {
-      extraHeaders: ['First: first', 'Second: second'],
-      RTCConstraints: {
-        optional: [{ DtlsSrtpKeyAgreement: 'true' }]
-      },
-      mediaConstraints: {
-        audio: true
-      },
-      sessionTimersExpires: 600
-    });
+
+    logInfo(`Placing call to ${target.uri}`);
+    try {
+      this.phone.call(target.uri, {
+        mediaConstraints: { audio: true, video: false },
+        sessionTimersExpires: 600
+      });
+    } catch (error) {
+      logError('phone.call() threw an error', error);
+      this.notify(`Failed to start call: ${(error && error.message) || error}`);
+    }
   };
 
   this.answer = (sessionId) => {
@@ -326,8 +435,8 @@ function CallsFlowControl() {
 
   this.start = () => {
     if (!this.initiated) {
+      logError('Cannot start: UA has not been initialized (call init() first)');
       this.notify('Please initialize phone before connecting');
-      console.log('Please call .init() before connect');
       return;
     }
 
@@ -336,10 +445,17 @@ function CallsFlowControl() {
     } else {
       debug.disable();
     }
-    this.phone.start();
+    logInfo(`Starting JsSIP UA, opening WebSocket to ${this.config.ws_servers}`);
+    try {
+      this.phone.start();
+    } catch (error) {
+      logError('Failed to start JsSIP UA', error);
+      this.notify(`Failed to connect: ${(error && error.message) || error}`);
+    }
   };
 
   this.stop = () => {
+    logInfo('Stopping JsSIP UA');
     this.phone.stop();
   };
 }
