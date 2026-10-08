@@ -372,7 +372,7 @@ This will show detailed logs for:
 
 ```bash
 # Clone the repository
-git clone https://github.com/chamuridis/react-softphone.git
+git clone https://github.com/wijayadi/react-softphone.git
 
 # Install dependencies
 npm install
