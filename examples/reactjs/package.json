@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-softphone": "file:../.."
+    "@sengsara/react-softphone": "file:../.."
   },
   "devDependencies": {
     "@types/react": "^19.2.18",

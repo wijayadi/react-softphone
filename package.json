@@ -1,5 +1,5 @@
 {
-  "name": "react-softphone",
+  "name": "@sengsara/react-softphone",
   "version": "3.1.1",
   "description": "Webrtc Softphone React",
   "type": "module",
@@ -23,10 +23,15 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c --watch",
+    "lint": "oxlint src",
+    "test": "playwright test",
+    "test:e2e": "playwright test",
+    "pack": "npm pack",
     "prepack": "npm run build",
-    "release": "npx np",
-    "test": "",
-    "test:e2e": "playwright test"
+    "release": "npx np"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -76,6 +81,7 @@
     "@rollup/plugin-terser": "^0.4.0",
     "@vitejs/plugin-react": "^6.1.2",
     "esbuild": ">=0.25.0",
+    "oxlint": "^1.81.0",
     "rollup": "^4.0.0",
     "rollup-plugin-esbuild": "^6.0.0",
     "rollup-plugin-peer-deps-external": "^2.2.0",

@@ -8,6 +8,10 @@ import { defineConfig } from '@playwright/test';
 //
 // Uses the locally installed Google Chrome (channel: 'chrome') so no Playwright
 // browser download is needed.
+// Uses the locally installed Google Chrome by default (no Playwright browser
+// download). In CI set PLAYWRIGHT_CHANNEL=chromium after `playwright install`.
+const channel = process.env.PLAYWRIGHT_CHANNEL ?? 'chrome';
+
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.spec.ts',
@@ -18,7 +22,7 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: 'http://127.0.0.1:5199',
-    channel: 'chrome',
+    channel,
     permissions: ['microphone'],
     launchOptions: {
       args: [

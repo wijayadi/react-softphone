@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "React Softphone - Next.js Example",
-  description: "Next.js example using the react-softphone component",
+  description: "Next.js example using the @sengsara/react-softphone component",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -4,9 +4,9 @@ import { useCallback, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 // The softphone component is browser-only (WebRTC + JsSIP), so we load it
-// client-side only. `react-softphone` is linked via a local path dependency
-// (see package.json -> "react-softphone": "file:../..").
-const SoftPhone = dynamic(() => import('react-softphone'), {
+// client-side only. `@sengsara/react-softphone` is linked via a local path
+// dependency (see package.json -> "@sengsara/react-softphone": "file:../..").
+const SoftPhone = dynamic(() => import('@sengsara/react-softphone'), {
   ssr: false,
   loading: () => <p style={{ opacity: 0.7 }}>Loading softphone…</p>,
 });

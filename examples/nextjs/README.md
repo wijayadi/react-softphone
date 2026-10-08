@@ -1,14 +1,14 @@
 # React Softphone – Next.js Example
 
 A minimal [Next.js](https://nextjs.org) (App Router) app that consumes the
-`react-softphone` component from this repository.
+`@sengsara/react-softphone` component from this repository.
 
 The component is **referenced by path** – it is *not* installed from npm:
 
 ```jsonc
 // package.json
 "dependencies": {
-  "react-softphone": "file:../.."
+  "@sengsara/react-softphone": "file:../.."
 }
 ```
 
@@ -75,7 +75,7 @@ pnpm build && pnpm start
 > the built `dist/`. After changing the component source, rebuild it
 > (`npm run build` at the repo root) and clear the Next cache
 > (`rm -rf .next`) so stale compiled output is not served. The path-linked copy
-> in `node_modules/react-softphone` is refreshed on `pnpm install`.
+> in `node_modules/@sengsara/react-softphone` is refreshed on `pnpm install`.
 
 ### Debug mode
 

@@ -1,4 +1,4 @@
-declare module 'react-softphone' {
+declare module '@sengsara/react-softphone' {
   import type * as React from 'react';
 
   export interface SoftPhoneConfig {

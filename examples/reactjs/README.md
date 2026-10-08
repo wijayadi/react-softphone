@@ -1,26 +1,26 @@
 # React Softphone – Vite + React Example
 
 A minimal [Vite](https://vite.dev) + React (SPA) app that consumes the
-`react-softphone` component from this repository.
+`@sengsara/react-softphone` component from this repository.
 
 The component is **referenced by path** – it is *not* installed from npm:
 
 ```jsonc
 // package.json
 "dependencies": {
-  "react-softphone": "file:../.."
+  "@sengsara/react-softphone": "file:../.."
 }
 ```
 
-In addition, `vite.config.js` aliases `react-softphone` straight to the
-component **source** and dedupes React:
+In addition, `vite.config.js` aliases `@sengsara/react-softphone` straight to
+the component **source** and dedupes React:
 
 ```js
 resolve: {
-  alias: { 'react-softphone': path.resolve(dirname, '../../src/index.jsx') },
+  alias: { '@sengsara/react-softphone': path.resolve(dirname, '../../src/index.jsx') },
   dedupe: ['react', 'react-dom'],
 },
-optimizeDeps: { exclude: ['react-softphone'] },
+optimizeDeps: { exclude: ['@sengsara/react-softphone'] },
 ```
 
 This means the example always runs the current component source with instant
@@ -73,13 +73,13 @@ pnpm build && pnpm preview
 
 ## How it works
 
-- `vite.config.js` – aliases `react-softphone` to `../../src/index.jsx` (the
-  component source) and dedupes React, so dev/build always use the current
+- `vite.config.js` – aliases `@sengsara/react-softphone` to `../../src/index.jsx`
+  (the component source) and dedupes React, so dev/build always use the current
   component.
 - `src/App.jsx` – builds the SIP config from `import.meta.env`, keeps the
   volume/notification/auto-connect preferences in `localStorage`, and renders
-  the imported `react-softphone` component via the built-in launcher and an
-  "Open Softphone" button.
+  the imported `@sengsara/react-softphone` component via the built-in launcher
+  and an "Open Softphone" button.
 - `public/sound/ringing.ogg` and `public/sound/ringback.ogg` – placeholder
   ringtones generated with `ffmpeg`. Replace them with your own audio.
 

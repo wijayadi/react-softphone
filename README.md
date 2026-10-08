@@ -1,6 +1,6 @@
 # React SoftPhone
 
-[![NPM](https://img.shields.io/npm/v/react-softphone.svg)](https://www.npmjs.com/package/react-softphone)
+[![NPM](https://img.shields.io/npm/v/@sengsara/react-softphone.svg)](https://www.npmjs.com/package/@sengsara/react-softphone)
 
 A modern WebRTC softphone component for React applications with all dependencies bundled and zero translation dependencies.
 
@@ -13,7 +13,7 @@ A modern WebRTC softphone component for React applications with all dependencies
 ## ✨ Features
 
 - 🚀 **Self-Contained** - All MUI dependencies bundled, no additional installs needed
-- 📦 **Simple Installation** - Just `npm install react-softphone` and you're ready
+- 📦 **Simple Installation** - Just `npm install @sengsara/react-softphone` and you're ready
 - 🎯 **Material Design** - Beautiful UI with Material-UI components included
 - 📱 **WebRTC Ready** - Built on JsSIP for reliable VoIP calls
 - ⚛️ **Modern React** - Uses hooks and modern React patterns
@@ -23,7 +23,7 @@ A modern WebRTC softphone component for React applications with all dependencies
 ## 📦 Installation
 
 ```bash
-npm install react-softphone
+npm install @sengsara/react-softphone
 ```
 
 **That's it!** All MUI dependencies are bundled - no additional packages needed.
@@ -44,8 +44,8 @@ cd my-softphone-app
 ### Step 2: Install React Softphone
 
 ```bash
-# Install the react-softphone package
-npm install react-softphone
+# Install the @sengsara/react-softphone package
+npm install @sengsara/react-softphone
 ```
 
 ### Step 3: Add Audio Files
@@ -67,7 +67,7 @@ Replace the contents of `src/App.js` with:
 
 ```jsx
 import React, { useState } from 'react';
-import SoftPhone from 'react-softphone';
+import SoftPhone from '@sengsara/react-softphone';
 import './App.css';
 
 function App() {

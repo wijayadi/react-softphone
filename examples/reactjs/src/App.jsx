@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import SoftPhone from 'react-softphone'
+import SoftPhone from '@sengsara/react-softphone'
 import './App.css'
 
 /**
