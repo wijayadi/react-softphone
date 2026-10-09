@@ -151,6 +151,10 @@ export interface SoftPhoneProps {
   /** Called with the new config after the user applies it via Reconnect. */
   onConfigChange?: (config: SoftPhoneConfig) => void;
   /**
+   * UI language. Supported: `en`, `id`, `jp`. Defaults to `en`.
+   */
+  lang?: string;
+  /**
    * Bind to an existing zustand store so multiple views share one session.
    * When omitted, `<SoftPhone />` creates and owns a store for its lifetime.
    */

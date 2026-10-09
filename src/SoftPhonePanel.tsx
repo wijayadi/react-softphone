@@ -15,6 +15,7 @@ import SwipeCaruselBlock from './phoneBlocks/swipe-carusel-block';
 import SwipeCaruselBodyBlock from './phoneBlocks/SwipeCaruselBodyBlock';
 import StatusBlock from './phoneBlocks/status-block';
 import { useSoftphone, useSoftphoneStore } from './store/context';
+import { m } from './i18n';
 
 export interface SoftPhonePanelProps {
   /** Optional className for embedding/styling the panel root. */
@@ -78,6 +79,7 @@ export function SoftPhonePanel({ className, inputId = 'phone-input' }: SoftPhone
   const timelocale = useSoftphone((s) => s.timelocale);
   const asteriskAccounts = useSoftphone((s) => s.asteriskAccounts);
   const showConfigEditor = useSoftphone((s) => s.showConfigEditor);
+  const locale = useSoftphone((s) => s.locale);
 
   // Actions are stable for the lifetime of the store.
   const actions = store.getState();
@@ -89,7 +91,7 @@ export function SoftPhonePanel({ className, inputId = 'phone-input' }: SoftPhone
   };
 
   return (
-    <PanelRoot className={className}>
+    <PanelRoot className={className} data-locale={locale}>
       <CallQueue
         calls={phoneState.phoneCalls}
         handleAnswer={(event) => actions.answer(event.currentTarget.value)}
@@ -116,7 +118,7 @@ export function SoftPhonePanel({ className, inputId = 'phone-input' }: SoftPhone
         <PhoneTextFieldStyled
           value={dialState}
           id={inputId}
-          label="Phone Number"
+          label={m.phone_number()}
           fullWidth
           onKeyUp={dialNumberOnEnter}
           onChange={(event) => actions.setDial(event.target.value)}
@@ -133,7 +135,7 @@ export function SoftPhonePanel({ className, inputId = 'phone-input' }: SoftPhone
                   size="small"
                   onClick={() => actions.clearDial()}
                   edge="end"
-                  aria-label="clear number"
+                  aria-label={m.clear_number()}
                 >
                   <XIcon fontSize="small" />
                 </IconButton>

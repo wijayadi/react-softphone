@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 
 import SearchList from './search-list';
+import { m } from '../i18n';
 import type { AsteriskAccount, DisplayCall } from '../types';
 
 export interface KeypadBlockProps {
@@ -250,13 +251,13 @@ function KeypadBlock({
           <GridRaw container spacing={0}>
             <Grid item xs={3}>
               <Grid item xs={12}>
-                <Tooltip title={muted ? 'Unmute Microphone' : 'Mute Microphone'} disableFocusListener disableTouchListener>
+                <Tooltip title={muted ? m.unmute_microphone() : m.mute_microphone()} disableFocusListener disableTouchListener>
                   <div>
                     <FabStyled
                       disabled={!inCall}
                       value={inCall as unknown as string}
                       size="small"
-                      aria-label={muted ? 'unmute' : 'mute'}
+                      aria-label={muted ? m.unmute() : m.mute()}
                       onClick={handleMicMute}
                       sx={theme => ({
                         // Adaptive colors based on theme mode
@@ -289,17 +290,17 @@ function KeypadBlock({
               <Grid hidden>
                 <FormControlLabel
                   control={<Switch size="small" checked onChange={() => {}} />}
-                  label="Mute"
+                  label={m.mute()}
                 />
               </Grid>
             </Grid>
             <Grid item xs={3}>
-              <Tooltip title={hold ? 'Resume Call' : 'Hold Call'} disableFocusListener disableTouchListener>
+              <Tooltip title={hold ? m.resume_call() : m.hold_call()} disableFocusListener disableTouchListener>
                 <div>
                   <FabStyled
                     disabled={!inCall || !inAnswer}
                     size="small"
-                    aria-label={hold ? 'resume' : 'hold'}
+                    aria-label={hold ? m.resume() : m.hold()}
                     onClick={() => {
                       handleHold(sessionId, hold);
                     }}
@@ -332,12 +333,12 @@ function KeypadBlock({
               </Tooltip>
             </Grid>
             <Grid item xs={3}>
-              <Tooltip title="Transfer Call">
+              <Tooltip title={m.transfer_call()}>
                 <div>
                   <FabStyled
                     disabled={!inCall || !inAnswer || hold || !allowAttendedTransfer}
                     size="small"
-                    aria-label="transfer-call"
+                    aria-label={m.transfer_call_short()}
                     onClick={handleClickTransferCall}
                     aria-describedby="transferredBox"
                     sx={theme => ({
@@ -371,12 +372,12 @@ function KeypadBlock({
               />
             </Grid>
             <Grid item xs={3}>
-              <Tooltip title="Attended Transfer">
+              <Tooltip title={m.attended_transfer()}>
                 <div>
                   <FabStyled
                     disabled={!inCall || !inAnswer || hold || !allowTransfer}
                     size="small"
-                    aria-label="attended-transfer"
+                    aria-label={m.attended_transfer_short()}
                     onClick={handleClickAttendedTransfer}
                     aria-describedby="attendedBox"
                     sx={theme => ({
@@ -417,12 +418,12 @@ function KeypadBlock({
                 <GridRaw item xs={12}>
                   <Grid container spacing={0}>
                     <Grid item xs={3}>
-                      <Tooltip title="Conference" aria-label="conference">
+                      <Tooltip title={m.conference()} aria-label={m.conference()}>
                         <span>
                           <ActionFab
                             disabled={false}
                             size="small"
-                            aria-label="conference"
+                            aria-label={m.conference()}
                             onClick={() => {
                               handleCallAttendedTransfer('merge', {});
                             }}
@@ -442,12 +443,12 @@ function KeypadBlock({
                       </Tooltip>
                     </Grid>
                     <Grid item xs={3}>
-                      <Tooltip title="Swap Caller" aria-label="swap-caller">
+                      <Tooltip title={m.swap_caller()} aria-label={m.swap_caller()}>
                         <span>
                           <ActionFab
                             disabled={false}
                             size="small"
-                            aria-label="swap-caller"
+                            aria-label={m.swap_caller()}
                             onClick={() => {
                               handleCallAttendedTransfer('swap', {});
                             }}
@@ -467,12 +468,12 @@ function KeypadBlock({
                       </Tooltip>
                     </Grid>
                     <Grid item xs={3}>
-                      <Tooltip title="Pass Call" aria-label="pass-call">
+                      <Tooltip title={m.pass_call()} aria-label={m.pass_call()}>
                         <span>
                           <ActionFab
                             disabled={false}
                             size="small"
-                            aria-label="pass-call"
+                            aria-label={m.pass_call()}
                             onClick={() => {
                               handleCallAttendedTransfer('finish', {});
                             }}
@@ -492,12 +493,12 @@ function KeypadBlock({
                       </Tooltip>
                     </Grid>
                     <Grid item xs={3}>
-                      <Tooltip title="Cancel Transfer" aria-label="cancel-transfer">
+                      <Tooltip title={m.cancel_transfer()} aria-label={m.cancel_transfer()}>
                         <span>
                           <ActionFab
                             disabled={false}
                             size="small"
-                            aria-label="cancel-transfer"
+                            aria-label={m.cancel_transfer()}
                             onClick={() => {
                               handleCallAttendedTransfer('cancel', {});
                             }}
@@ -528,7 +529,7 @@ function KeypadBlock({
             {inCall === false ? (
               <FabStyled
                 size="large"
-                aria-label="Make Call"
+                aria-label={m.make_call()}
                 onClick={handleCall}
                 sx={theme => ({
                   width: '52px',
@@ -547,7 +548,7 @@ function KeypadBlock({
             ) : (
               <FabStyled
                 size="large"
-                aria-label="End Call"
+                aria-label={m.end_call()}
                 onClick={handleEndCall}
                 sx={theme => ({
                   width: '52px',

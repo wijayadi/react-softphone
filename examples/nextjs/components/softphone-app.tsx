@@ -64,6 +64,7 @@ const sipConfig = {
 
 export default function SoftPhoneApp() {
   const [softPhoneOpen, setSoftPhoneOpen] = useState(false);
+  const [lang, setLang] = useState('en');
 
   const [callVolume, setCallVolume] = usePersistentState(
     'softphone-call-volume',
@@ -107,6 +108,19 @@ export default function SoftPhoneApp() {
         📞 Open Softphone
       </button>
 
+      <label className="flex items-center gap-2 text-sm">
+        Language
+        <select
+          value={lang}
+          onChange={(event) => setLang(event.target.value)}
+          className="rounded border border-black/20 bg-transparent px-2 py-1 dark:border-white/20"
+        >
+          <option value="en">English</option>
+          <option value="id">Bahasa Indonesia</option>
+          <option value="jp">日本語</option>
+        </select>
+      </label>
+
       <SoftPhone
         // Visibility control
         softPhoneOpen={softPhoneOpen}
@@ -133,6 +147,8 @@ export default function SoftPhoneApp() {
         asteriskAccounts={[]}
         // Timezone for call history
         timelocale="UTC"
+        // UI language (en | id | jp)
+        lang={lang}
       />
     </div>
   );

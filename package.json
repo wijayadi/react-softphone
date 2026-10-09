@@ -23,14 +23,23 @@
     "src"
   ],
   "scripts": {
+    "i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy globalVariable baseLocale --emit-ts-declarations",
+    "predev": "npm run i18n",
     "dev": "vite build --watch",
-    "build": "vite build && tsc -p tsconfig.build.json",
-    "build:types": "tsc -p tsconfig.build.json",
+    "prebuild": "npm run i18n",
+    "build": "vite build && tsc -p tsconfig.build.json && node scripts/copy-paraglide.mjs",
+    "prebuild:types": "npm run i18n",
+    "build:types": "tsc -p tsconfig.build.json && node scripts/copy-paraglide.mjs",
+    "pretypecheck": "npm run i18n",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src",
+    "pretest": "npm run i18n",
     "test": "playwright test",
+    "pretest:e2e": "npm run i18n",
     "test:e2e": "playwright test",
+    "prestorybook": "npm run i18n",
     "storybook": "storybook dev -p 6006",
+    "prebuild-storybook": "npm run i18n",
     "build-storybook": "storybook build",
     "pack": "npm pack",
     "prepack": "npm run build",
@@ -71,6 +80,7 @@
     "luxon": "^3.7.2"
   },
   "peerDependencies": {
+    "@inlang/paraglide-js": "^2.26.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
     "zustand": "^5.0.0"
@@ -81,6 +91,7 @@
     "url": "https://github.com/sponsors/chamuridis"
   },
   "devDependencies": {
+    "@inlang/paraglide-js": "^2.26.0",
     "@playwright/test": "^1.64.0",
     "@storybook/addon-a11y": "^10.6.1",
     "@storybook/addon-docs": "^10.6.1",

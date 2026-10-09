@@ -21,6 +21,7 @@ import {
 import { DateTime } from 'luxon';
 
 import SettingsBlock from './SettingsBlock';
+import { m } from '../i18n';
 import type { CallLogEntry, SoftPhoneConfig, SoftPhoneState } from '../types';
 
 export interface SwipeCaruselBodyBlockProps {
@@ -196,12 +197,12 @@ function SwipeCaruselBodyBlock({
         >
           <StyledTab
             icon={<SettingsIcon />}
-            label="Settings"
+            label={m.settings()}
             {...a11yProps(0)}
           />
           <StyledTab
             icon={<HistoryIcon />}
-            label="History"
+            label={m.history()}
             {...a11yProps(1)}
           />
         </Tabs>
@@ -230,8 +231,8 @@ function SwipeCaruselBodyBlock({
           {calls.length === 0 ? (
             <EmptyCallsContainer>
               <AccessTime fontSize="large" />
-              <Typography variant="subtitle1" fontWeight={500}>No call history</Typography>
-              <Typography variant="body2">Your recent calls will appear here</Typography>
+              <Typography variant="subtitle1" fontWeight={500}>{m.no_call_history()}</Typography>
+              <Typography variant="body2">{m.no_call_history_hint()}</Typography>
             </EmptyCallsContainer>
           ) : (
             <ListRoot className="root" subheader={<li />}>

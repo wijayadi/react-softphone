@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import SoftPhonePanel from './SoftPhonePanel';
+import LanguageSwitcher from './LanguageSwitcher';
 import { SoftphoneProvider } from './store/context';
 import { createSoftphoneStore } from './store/createSoftphoneStore';
 import { mockAccounts, mockConfig } from './stories/fixtures';
@@ -26,8 +27,13 @@ const meta = {
       );
       return (
         <SoftphoneProvider store={store}>
-          <div style={{ display: 'flex', height: '100vh' }}>
-            <Story />
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+            <div style={{ padding: 8 }}>
+              <LanguageSwitcher store={store} />
+            </div>
+            <div style={{ display: 'flex', flexGrow: 1, minHeight: 0 }}>
+              <Story />
+            </div>
           </div>
         </SoftphoneProvider>
       );

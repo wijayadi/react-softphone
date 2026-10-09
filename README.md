@@ -257,13 +257,15 @@ window.__SOFTPHONE_DEBUG__ = true;
 
 ### Peer Dependencies
 
-React 18+ and `zustand` v5 are required (not bundled):
+React 18+, `zustand` v5, and `@inlang/paraglide-js` v2 are peer dependencies:
 
 ```bash
-npm install zustand
+npm install zustand @inlang/paraglide-js
 ```
 
-All other dependencies (MUI, JsSIP, lodash, luxon) are bundled with the package.
+`@inlang/paraglide-js` is only needed for compiling translations (see
+[Localization](#-localization)); the compiled runtime is bundled with the
+package. All other dependencies (MUI, JsSIP, lodash, luxon) are bundled.
 
 ## 🔧 Props Configuration
 
@@ -296,6 +298,8 @@ All other dependencies (MUI, JsSIP, lodash, luxon) are bundled with the package.
 | `assets` | Object | `undefined` | Override media asset URLs (see below) |
 | `showConfigEditor` | Boolean | `true` | Show the editable SIP account section in Settings |
 | `onConfigChange` | Function | `undefined` | Called with the new config after the user clicks Reconnect |
+| `lang` | String | `'en'` | UI language: `en`, `id`, or `jp` |
+| `store` | Store | `undefined` | Bind to an existing zustand store (shared state) |
 
 ### Config Object
 
@@ -442,6 +446,9 @@ npm run build
 # Type-check only
 npm run typecheck
 
+# Compile translations (Paraglide) into src/paraglide
+npm run i18n
+
 # Start Storybook (component explorer)
 npm run storybook
 
@@ -486,6 +493,45 @@ exercise prop variations. Coverage includes:
 # Uses the locally installed Google Chrome (channel: 'chrome')
 npm run test:e2e
 ```
+
+## 🌍 Localization
+
+The UI and all user-facing messages are translated with
+[Paraglide JS](https://paraglidejs.com). Supported locales: `en` (English),
+`id` (Bahasa Indonesia), and `jp` (日本語). The default is `en`.
+
+```jsx
+<SoftPhone config={config} lang={lang} />
+```
+
+Change language at runtime by updating the `lang` prop, or bind the exported
+`LanguageSwitcher` to a store:
+
+```jsx
+import {
+  LanguageSwitcher,
+  SoftPhonePanel,
+  SoftphoneProvider,
+  createSoftphoneStore,
+} from '@sengsara/react-softphone';
+
+const store = createSoftphoneStore({ config, lang: 'en' });
+
+<SoftphoneProvider store={store}>
+  <LanguageSwitcher store={store} />
+  <SoftPhonePanel />
+</SoftphoneProvider>;
+```
+
+### Adding or editing translations
+
+- Locale config: `project.inlang/settings.json`
+- Messages: `messages/{en,id,jp}.json` (Paraglide message format)
+- Compile: `npm run i18n` — also runs automatically before `build`, `dev`,
+  `typecheck`, `test`, and the Storybook scripts.
+
+Storybook shows a language switcher in the toolbar (globe icon), and both
+example apps include one.
 
 ## 🧩 Multiple Views & Shared State (zustand)
 

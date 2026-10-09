@@ -6,6 +6,7 @@ import {
   WifiTetheringOff as OfflineIcon,
   Loop as ConnectingIcon
 } from '@mui/icons-material';
+import { m } from '../i18n';
 
 export interface StatusBlockProps {
   connectingPhone?: boolean;
@@ -98,37 +99,37 @@ function StatusBlock({ connectingPhone, connectedPhone }: StatusBlockProps) {
   const getSoftphoneStatusChip = () => {
     // First check if internet is connected - if not, softphone must be offline too
     if (!internetConnected) {
-      return <OfflineChip icon={<OfflineIcon fontSize="small" />} label="Offline" />;
+      return <OfflineChip icon={<OfflineIcon fontSize="small" />} label={m.offline()} />;
     }
 
     // Only check actual softphone status if internet is available
     if (connectingPhone) {
       return connectedPhone
-        ? <OfflineChip icon={<CircularProgress size={12} />} label="Disconnecting" />
-        : <ConnectingChip icon={<ConnectingIcon fontSize="small" />} label="Connecting" />;
+        ? <OfflineChip icon={<CircularProgress size={12} />} label={m.disconnecting()} />
+        : <ConnectingChip icon={<ConnectingIcon fontSize="small" />} label={m.connecting()} />;
     }
 
     return connectedPhone
-      ? <OnlineChip icon={<OnlineIcon fontSize="small" />} label="Online" />
-      : <OfflineChip icon={<OfflineIcon fontSize="small" />} label="Offline" />;
+      ? <OnlineChip icon={<OnlineIcon fontSize="small" />} label={m.online()} />
+      : <OfflineChip icon={<OfflineIcon fontSize="small" />} label={m.offline()} />;
   };
 
   // Get the internet connection status chip
   const getInternetStatusChip = () => {
     return internetConnected
-      ? <OnlineChip icon={<OnlineIcon fontSize="small" />} label="Online" />
-      : <OfflineChip icon={<OfflineIcon fontSize="small" />} label="Offline" />;
+      ? <OnlineChip icon={<OnlineIcon fontSize="small" />} label={m.online()} />
+      : <OfflineChip icon={<OfflineIcon fontSize="small" />} label={m.offline()} />;
   };
 
   return (
     <Root>
       <StatusContainer>
         <StatusRow>
-          <StatusLabel variant="subtitle2">Internet</StatusLabel>
+          <StatusLabel variant="subtitle2">{m.internet()}</StatusLabel>
           {getInternetStatusChip()}
         </StatusRow>
         <StatusRow>
-          <StatusLabel variant="subtitle2">Softphone Connection</StatusLabel>
+          <StatusLabel variant="subtitle2">{m.softphone_connection()}</StatusLabel>
           {getSoftphoneStatusChip()}
         </StatusRow>
       </StatusContainer>

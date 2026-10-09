@@ -16,6 +16,7 @@ import {
 import SoftPhonePanel from './SoftPhonePanel';
 import { SoftphoneProvider } from './store/context';
 import { createSoftphoneStore } from './store/createSoftphoneStore';
+import { m } from './i18n';
 import type { SoftphoneInit, SoftphoneStoreApi } from './store/types';
 import type {
   LauncherPosition,
@@ -97,6 +98,7 @@ function SoftPhone({
   assets,
   showConfigEditor = true,
   onConfigChange,
+  lang,
   store: externalStore,
 }: SoftPhoneProps) {
   const init: SoftphoneInit = {
@@ -114,6 +116,7 @@ function SoftPhone({
     assets,
     showConfigEditor,
     onConfigChange,
+    lang,
   };
 
   // Create a store once per mount when one is not supplied. The provider is the
@@ -152,7 +155,7 @@ function SoftPhone({
           position={launcherPosition}
           size={launcherSize}
           onClick={handleLauncherToggle}
-          aria-label="Toggle Softphone"
+          aria-label={m.launcher_toggle()}
         >
           {isOpen ? <CloseIcon /> : <PhoneIcon />}
         </LauncherFab>
@@ -166,7 +169,7 @@ function SoftPhone({
           overflow: 'hidden'
         }}>
           <DrawerHeader>
-            <Typography variant="subtitle1" fontWeight={500}>Softphone</Typography>
+            <Typography variant="subtitle1" fontWeight={500}>{m.app_title()}</Typography>
             <IconButton
               onClick={handleCloseDrawer}
               data-testid="hide-soft-phone-button"
@@ -195,6 +198,7 @@ export default SoftPhone;
 
 // --- shared-state API -------------------------------------------------------
 export { SoftPhonePanel } from './SoftPhonePanel';
+export { LanguageSwitcher } from './LanguageSwitcher';
 export {
   SoftphoneProvider,
   useSoftphone,
@@ -210,6 +214,7 @@ export type {
   SoftphoneProviderProps,
 } from './store';
 export type { SoftPhonePanelProps } from './SoftPhonePanel';
+export type { LanguageSwitcherProps } from './LanguageSwitcher';
 
 export type {
   SoftPhoneProps,

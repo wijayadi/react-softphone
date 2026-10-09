@@ -23,6 +23,7 @@ export type SoftphoneInit = Pick<
   | 'asteriskAccounts'
   | 'showConfigEditor'
   | 'assets'
+  | 'lang'
   | 'onConfigChange'
   | 'setConnectOnStartToLocalStorage'
   | 'setNotifications'
@@ -55,6 +56,8 @@ export interface SoftphoneStoreState {
   activeChannel: number;
   /** Active bottom tab: 0 = Settings, 1 = History. */
   bodyTab: number;
+  /** Active UI locale (`en` | `id` | `jp`). */
+  locale: string;
   /** Snackbar notification. */
   notification: SoftphoneNotification;
   /** Draft config edited in the Settings form. */
@@ -91,6 +94,8 @@ export interface SoftphoneStoreActions {
   clearDial(): void;
   setActiveChannel(index: number): void;
   setBodyTab(index: number): void;
+  /** Change the UI language. */
+  setLang(locale: string): void;
   notify(message: string): void;
   dismissNotification(): void;
 

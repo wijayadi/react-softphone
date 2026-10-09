@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import SoftPhone, {
+  LanguageSwitcher,
   SoftPhonePanel,
   SoftphoneProvider,
   createSoftphoneStore,
@@ -64,7 +65,7 @@ const panelStyle = {
  * Two views bound to ONE zustand store: any change (dialer, tabs, call,
  * connection) is mirrored across both panels.
  */
-function MirrorDemo() {
+function MirrorDemo({ lang = 'en' }) {
   const store = useMemo(
     () =>
       createSoftphoneStore({
@@ -72,18 +73,24 @@ function MirrorDemo() {
         connectOnStart: false,
         notifications: false,
         timelocale: 'UTC',
+        lang,
       }),
-    [],
+    [lang],
   )
 
   return (
     <SoftphoneProvider store={store}>
-      <div style={{ display: 'flex', gap: 16, padding: 16 }}>
-        <div style={panelStyle}>
-          <SoftPhonePanel inputId="mirror-a" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 16 }}>
+        <div style={{ width: 200 }}>
+          <LanguageSwitcher store={store} />
         </div>
-        <div style={panelStyle}>
-          <SoftPhonePanel inputId="mirror-b" />
+        <div style={{ display: 'flex', gap: 16 }}>
+          <div style={panelStyle}>
+            <SoftPhonePanel inputId="mirror-a" />
+          </div>
+          <div style={panelStyle}>
+            <SoftPhonePanel inputId="mirror-b" />
+          </div>
         </div>
       </div>
     </SoftphoneProvider>
@@ -93,6 +100,7 @@ function MirrorDemo() {
 function App() {
   const [softPhoneOpen, setSoftPhoneOpen] = useState(false)
   const [showMirror, setShowMirror] = useState(false)
+  const [lang, setLang] = useState('en')
 
   const [callVolume, setCallVolume] = usePersistentState(
     'softphone-call-volume',
@@ -143,7 +151,11 @@ function App() {
           {showMirror ? 'Hide' : 'Show'} shared-state mirror
         </button>
 
-        {showMirror && <MirrorDemo />}
+        <div style={{ width: 200, margin: '0 auto 16px' }}>
+          <LanguageSwitcher value={lang} onChange={setLang} />
+        </div>
+
+        {showMirror && <MirrorDemo lang={lang} />}
 
         <SoftPhone
           // Visibility control
@@ -171,6 +183,8 @@ function App() {
           asteriskAccounts={[]}
           // Timezone for call history
           timelocale="UTC"
+          // UI language (en | id | jp)
+          lang={lang}
         />
       </header>
     </div>

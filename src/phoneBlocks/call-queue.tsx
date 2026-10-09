@@ -4,6 +4,7 @@ import {
 import React from 'react';
 import { styled } from '@mui/material/styles';
 import { Call, CallEnd } from '@mui/icons-material';
+import { m } from '../i18n';
 import type { PhoneCall } from '../types';
 
 export interface CallQueueProps {
@@ -86,7 +87,7 @@ function CallQueue({ calls, handleAnswer, handleReject }: CallQueueProps) {
               {parsedCaller[0] && (
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Caller variant="h6">
-                    Caller: <Box component="span" sx={{ ml: 1, fontWeight: 600, color: 'primary.main' }}>
+                    {m.caller()}: <Box component="span" sx={{ ml: 1, fontWeight: 600, color: 'primary.main' }}>
                       {parsedCaller[0]}
                     </Box>
                   </Caller>
@@ -97,7 +98,7 @@ function CallQueue({ calls, handleAnswer, handleReject }: CallQueueProps) {
                 {parsedCaller[1] && (
                   <Box sx={{ mb: 1 }}>
                     <CallerSmall variant="body2" color="text.secondary">
-                      Jurisdiction:
+                      {m.jurisdiction()}:
                       <Box component="span" sx={{ ml: 0.5, fontWeight: 500 }}>
                         {parsedCaller[1]}
                       </Box>
@@ -108,7 +109,7 @@ function CallQueue({ calls, handleAnswer, handleReject }: CallQueueProps) {
                 {parsedCaller[2] && (
                   <Box>
                     <CallerSmall variant="body2" color="text.secondary">
-                      Company Number:
+                      {m.company_number()}:
                       <Box component="span" sx={{ ml: 0.5, fontWeight: 500 }}>
                         {parsedCaller[2]}
                       </Box>
@@ -124,7 +125,7 @@ function CallQueue({ calls, handleAnswer, handleReject }: CallQueueProps) {
                   size="medium"
                   onClick={handleAnswer}
                   value={call.sessionId}
-                  aria-label="Answer Call"
+                  aria-label={m.answer_call()}
                   sx={{
                     transition: 'transform 0.2s ease-in-out',
                     '&:hover': { transform: 'scale(1.05)' }
@@ -138,7 +139,7 @@ function CallQueue({ calls, handleAnswer, handleReject }: CallQueueProps) {
                   size="medium"
                   onClick={handleReject}
                   value={call.sessionId}
-                  aria-label="Reject Call"
+                  aria-label={m.reject_call()}
                   sx={{
                     transition: 'transform 0.2s ease-in-out',
                     '&:hover': { transform: 'scale(1.05)' }

@@ -33,6 +33,7 @@ const initial = {
   connectOnStart: flag('connectOnStart', true),
   notifications: flag('notifications', false),
   mirror: flag('mirror', false),
+  lang: params.get('lang') ?? 'en',
 };
 
 const sampleAccounts: AsteriskAccount[] = [
@@ -49,6 +50,7 @@ const sampleAccounts: AsteriskAccount[] = [
   notifications: initial.notifications,
   callVolume: 0.5,
   ringVolume: 0.5,
+  lang: initial.lang,
 };
 
 function Harness() {
@@ -93,6 +95,7 @@ function Harness() {
       showConfigEditor={initial.showConfigEditor}
       asteriskAccounts={sampleAccounts}
       timelocale="UTC"
+      lang={initial.lang}
     />
   );
 }
@@ -110,6 +113,7 @@ function MirrorHarness() {
       timelocale: 'UTC',
       showConfigEditor: initial.showConfigEditor,
       asteriskAccounts: sampleAccounts,
+      lang: initial.lang,
     }),
   );
 

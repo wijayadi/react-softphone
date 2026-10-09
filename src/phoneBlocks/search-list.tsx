@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { green, red } from '@mui/material/colors';
+import { m } from '../i18n';
 import type { AsteriskAccount } from '../types';
 
 export interface SearchListProps {
@@ -73,7 +74,7 @@ function SearchList({
                 </li>
               );
             }}
-            renderInput={(params) => <TextField {...params} label="Search" variant="outlined" />}
+            renderInput={(params) => <TextField {...params} label={m.search()} variant="outlined" />}
             onChange={(event, value) => {
               if (value) {
                 handleClick(value.accountId);

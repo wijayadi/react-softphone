@@ -2,32 +2,33 @@ import { UA, debug } from 'jssip';
 import _ from 'lodash';
 import { debugLog, debugError, debugWarn, logInfo, logWarn, logError, describeSipEvent } from './constants';
 import { parseDialTarget } from './utils/dial';
+import { m, translateDialReason } from './i18n';
 import type { SipEventDescription } from './constants';
 
 // Map common SIP failure responses to actionable messages.
-const FRIENDLY_SIP_FAILURES: Record<number, string> = {
-  400: 'the server rejected the request (400 Bad Request)',
-  401: 'authentication required (401 Unauthorized)',
-  403: 'forbidden by the server (403 Forbidden)',
-  404: 'number not found (404 Not Found)',
-  408: 'no answer / request timed out (408)',
-  480: 'callee temporarily unavailable (480)',
-  486: 'callee is busy (486 Busy Here)',
-  487: 'call was cancelled (487)',
-  488: 'the server rejected the media/SDP (488 Not Acceptable Here) — check that the extension is enabled for WebRTC/DTLS and supports the offered codecs',
-  500: 'server error (500)',
-  503: 'service unavailable (503)',
-  603: 'call was declined (603 Declined)',
+const FRIENDLY_SIP_FAILURES: Record<number, () => string> = {
+  400: () => m.sip_400(),
+  401: () => m.sip_401(),
+  403: () => m.sip_403(),
+  404: () => m.sip_404(),
+  408: () => m.sip_408(),
+  480: () => m.sip_480(),
+  486: () => m.sip_486(),
+  487: () => m.sip_487(),
+  488: () => m.sip_488(),
+  500: () => m.sip_500(),
+  503: () => m.sip_503(),
+  603: () => m.sip_603(),
 };
 
 const friendlyFailure = (info: SipEventDescription): string => {
   if (info.cause === 'User Denied Media Access') {
-    return 'microphone access was denied';
+    return m.sip_media_denied();
   }
   const match = info.response ? String(info.response).match(/^(\d{3})/) : null;
   const code = match ? Number(match[1]) : null;
   if (code && FRIENDLY_SIP_FAILURES[code]) {
-    return FRIENDLY_SIP_FAILURES[code];
+    return FRIENDLY_SIP_FAILURES[code]();
   }
   return `${info.cause}${info.response ? ` (${info.response})` : ''}`;
 };
@@ -78,7 +79,7 @@ function CallsFlowControl(this: any) {
       }
     } else {
       debugLog('Please exit from all active calls to unhold');
-      this.notify('Please exit from all active calls to unhold');
+      this.notify(m.exit_active_calls_to_unhold());
 
     }
   };
@@ -225,7 +226,7 @@ function CallsFlowControl(this: any) {
           err
         );
         this.notify(
-          `Microphone access failed: ${err.name || 'Error'}. Allow microphone access (and serve the app over HTTPS or localhost), then try again.`
+          m.microphone_failed({ error: err.name || 'Error' }),
         );
         // JsSIP emits 'failed' right after this with cause
         // "User Denied Media Access"; avoid notifying twice.
@@ -256,7 +257,7 @@ function CallsFlowControl(this: any) {
           data
         );
         if (!this.mediaErrorNotified) {
-          this.notify(`Call failed: ${friendlyFailure(info)}`);
+          this.notify(m.call_failed({ reason: friendlyFailure(info) }));
         }
         this.mediaErrorNotified = false;
         this.stopRingback();
@@ -375,25 +376,25 @@ function CallsFlowControl(this: any) {
 
     if (!target.valid) {
       logError(`Invalid dial target "${to}": ${target.reason}`);
-      this.notify(`Invalid number: ${target.reason}`);
+      this.notify(m.invalid_number({ reason: translateDialReason(target.reason) }));
       return;
     }
 
     if (!this.connectedPhone) {
       logError('Cannot place call: not connected to the VoIP server');
-      this.notify('Please connect to VoIP server first');
+      this.notify(m.please_connect());
       return;
     }
 
     if (!this.phone) {
       logError('Cannot place call: the phone (UA) has not been initialized');
-      this.notify('Phone is not initialized');
+      this.notify(m.phone_not_initialized());
       return;
     }
 
     if (this.activeCall) {
       logWarn('Cannot place call: an active call already exists');
-      this.notify('Active call already exists');
+      this.notify(m.active_call_exists());
       return;
     }
 
@@ -405,7 +406,11 @@ function CallsFlowControl(this: any) {
       });
     } catch (error) {
       logError('phone.call() threw an error', error);
-      this.notify(`Failed to start call: ${(error && (error as Error).message) || error}`);
+      this.notify(
+        m.failed_to_start_call({
+          error: (error && (error as Error).message) || String(error),
+        }),
+      );
     }
   };
 
@@ -426,7 +431,7 @@ function CallsFlowControl(this: any) {
       }
     } catch (err) {
       console.error('Error answering call:', err);
-      this.notify('Error answering call');
+      this.notify(m.error_answering_call());
     }
   };
 
@@ -442,7 +447,7 @@ function CallsFlowControl(this: any) {
   this.start = () => {
     if (!this.initiated) {
       logError('Cannot start: UA has not been initialized (call init() first)');
-      this.notify('Please initialize phone before connecting');
+      this.notify(m.initialize_phone_first());
       return;
     }
 
@@ -456,7 +461,11 @@ function CallsFlowControl(this: any) {
       this.phone.start();
     } catch (error) {
       logError('Failed to start JsSIP UA', error);
-      this.notify(`Failed to connect: ${(error && (error as Error).message) || error}`);
+      this.notify(
+        m.failed_to_connect({
+          error: (error && (error as Error).message) || String(error),
+        }),
+      );
     }
   };
 
@@ -477,7 +486,11 @@ function CallsFlowControl(this: any) {
       this.start();
     } catch (error) {
       logError('Failed to reconnect JsSIP UA', error);
-      this.notify(`Failed to reconnect: ${(error && (error as Error).message) || error}`);
+      this.notify(
+        m.failed_to_reconnect({
+          error: (error && (error as Error).message) || String(error),
+        }),
+      );
     }
   };
 

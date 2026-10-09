@@ -18,6 +18,7 @@ import { PhoneX as PhoneXIcon } from '@phosphor-icons/react/dist/ssr/PhoneX';
 import { DeviceMobile as DeviceMobileIcon } from '@phosphor-icons/react/dist/ssr/DeviceMobile';
 import { ArrowsClockwise as ArrowsClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowsClockwise';
 import { PauseCircle as PauseCircleIcon } from '@phosphor-icons/react/dist/ssr/PauseCircle';
+import { m, translateCallInfo } from '../i18n';
 import type { SoftPhoneState } from '../types';
 
 export interface SwipeCaruselBlockProps {
@@ -326,9 +327,9 @@ function SwipeCaruselBlock({
           textColor="primary"
           variant="fullWidth"
         >
-          <StyledTab label="Ch 1" {...a11yProps(0)} />
-          <StyledTab label="Ch 2" {...a11yProps(1)} />
-          <StyledTab label="Ch 3" {...a11yProps(2)} />
+          <StyledTab label={m.channel({ number: 1 })} {...a11yProps(0)} />
+          <StyledTab label={m.channel({ number: 2 })} {...a11yProps(1)} />
+          <StyledTab label={m.channel({ number: 3 })} {...a11yProps(2)} />
         </Tabs>
       </AppBar>
       <MuiSwipeableViews
@@ -351,7 +352,7 @@ function SwipeCaruselBlock({
                       <CallInfoCard elevation={1}>
                         <Chip
                           icon={<PauseCircleIcon size={16} />}
-                          label="On Hold"
+                          label={m.on_hold()}
                           size="small"
                           color="warning"
                           variant="filled"
@@ -360,41 +361,41 @@ function SwipeCaruselBlock({
 
                         <CallInfoGrid container spacing={2}>
                           <Grid item xs={6}>
-                            <StatusLabel>Status</StatusLabel>
+                            <StatusLabel>{m.status()}</StatusLabel>
                             <StatusValue>
-                              {displayCall.callInfo}
-                            </StatusValue>
+                        {translateCallInfo(displayCall.callInfo)}
+                      </StatusValue>
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Direction</StatusLabel>
+                            <StatusLabel>{m.direction()}</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                               {displayCall.direction === 'outgoing' ? (
                                 <>
                                   <PhoneOutgoingIcon size={16} style={{ marginRight: '4px', color: '#4caf50' }} />
-                                  Outgoing
+                                  {m.outgoing()}
                                 </>
                               ) : (
                                 <>
                                   <PhoneIncomingIcon size={16} style={{ marginRight: '4px', color: '#2196f3' }} />
-                                  Incoming
+                                  {m.incoming()}
                                 </>
                               )}
                             </StatusValue>
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Ring Duration</StatusLabel>
+                            <StatusLabel>{m.ring_duration()}</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Call Duration</StatusLabel>
+                            <StatusLabel>{m.call_duration()}</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].callDuration / 60).toString().padStart(2, '0')}:${(durations[key].callDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
 
                           <Grid item xs={12}>
-                            <StatusLabel>Number</StatusLabel>
+                            <StatusLabel>{m.number()}</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                               <PhoneIcon size={16} style={{ marginRight: '8px' }} />
                               {displayCall.callNumber}
@@ -410,7 +411,7 @@ function SwipeCaruselBlock({
                       <CallInfoCard elevation={1}>
                         <Chip
                           icon={<ArrowsClockwiseIcon size={16} />}
-                          label="In Transfer"
+                          label={m.in_transfer()}
                           size="small"
                           color="info"
                           variant="filled"
@@ -419,41 +420,41 @@ function SwipeCaruselBlock({
 
                         <CallInfoGrid container spacing={2}>
                           <Grid item xs={6}>
-                            <StatusLabel>Status</StatusLabel>
+                            <StatusLabel>{m.status()}</StatusLabel>
                             <StatusValue>
-                              {displayCall.callInfo}
-                            </StatusValue>
+                        {translateCallInfo(displayCall.callInfo)}
+                      </StatusValue>
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Direction</StatusLabel>
+                            <StatusLabel>{m.direction()}</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                               {displayCall.direction === 'outgoing' ? (
                                 <>
                                   <PhoneOutgoingIcon size={16} style={{ marginRight: '4px', color: '#4caf50' }} />
-                                  Outgoing
+                                  {m.outgoing()}
                                 </>
                               ) : (
                                 <>
                                   <PhoneIncomingIcon size={16} style={{ marginRight: '4px', color: '#2196f3' }} />
-                                  Incoming
+                                  {m.incoming()}
                                 </>
                               )}
                             </StatusValue>
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Ring Duration</StatusLabel>
+                            <StatusLabel>{m.ring_duration()}</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Call Duration</StatusLabel>
+                            <StatusLabel>{m.call_duration()}</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].callDuration / 60).toString().padStart(2, '0')}:${(durations[key].callDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Number</StatusLabel>
+                            <StatusLabel>{m.number()}</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                               <PhoneIcon size={16} style={{ marginRight: '4px' }} />
                               {displayCall.callNumber}
@@ -461,7 +462,7 @@ function SwipeCaruselBlock({
                           </Grid>
 
                           <Grid item xs={6}>
-                            <StatusLabel>Transfer To</StatusLabel>
+                              <StatusLabel>{m.transfer_to()}</StatusLabel>
                             <StatusValue sx={{ color: 'primary.main' }}>
                               {displayCall.transferNumber}
                             </StatusValue>
@@ -469,7 +470,7 @@ function SwipeCaruselBlock({
 
                           {displayCall.attendedTransferOnline.length > 1 && !displayCall.inConference && (
                             <Grid item xs={12}>
-                              <StatusLabel>Talking With</StatusLabel>
+                              <StatusLabel>{m.talking_with()}</StatusLabel>
                               <StatusValue sx={{ fontWeight: 'bold', color: 'success.main' }}>
                                 {displayCall.attendedTransferOnline}
                               </StatusValue>
@@ -485,7 +486,7 @@ function SwipeCaruselBlock({
                     <CallInfoCard elevation={1}>
                       <Chip
                         icon={<PhoneIcon size={16} />}
-                        label="Active Call"
+                        label={m.active_call()}
                         size="small"
                         color="success"
                         variant="filled"
@@ -494,14 +495,14 @@ function SwipeCaruselBlock({
 
                       <CallInfoGrid container spacing={2}>
                         <Grid item xs={6}>
-                          <StatusLabel>Status</StatusLabel>
+                          <StatusLabel>{m.status()}</StatusLabel>
                           <StatusValue>
-                            {displayCall.callInfo}
+                            {translateCallInfo(displayCall.callInfo)}
                           </StatusValue>
                         </Grid>
 
                         <Grid item xs={6}>
-                          <StatusLabel>Direction</StatusLabel>
+                          <StatusLabel>{m.direction()}</StatusLabel>
                           <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                             {displayCall.direction === 'outgoing' ? (
                               <>
@@ -518,19 +519,19 @@ function SwipeCaruselBlock({
                         </Grid>
 
                         <Grid item xs={6}>
-                          <StatusLabel>Ring Duration</StatusLabel>
+                          <StatusLabel>{m.ring_duration()}</StatusLabel>
                           <StatusValue>{`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                         </Grid>
 
                         <Grid item xs={6}>
-                          <StatusLabel>Call Duration</StatusLabel>
+                          <StatusLabel>{m.call_duration()}</StatusLabel>
                           <StatusValue sx={{ fontWeight: 'bold', color: 'success.main' }}>
                             {`${Math.floor(durations[key].callDuration / 60).toString().padStart(2, '0')}:${(durations[key].callDuration % 60).toString().padStart(2, '0')}`}
                           </StatusValue>
                         </Grid>
 
                         <Grid item xs={12}>
-                          <StatusLabel>Number</StatusLabel>
+                          <StatusLabel>{m.number()}</StatusLabel>
                           <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                             <PhoneIcon size={16} style={{ marginRight: '8px' }} />
                             {displayCall.callNumber}
@@ -546,7 +547,7 @@ function SwipeCaruselBlock({
                   <CallInfoCard elevation={1}>
                     <Chip
                       icon={<PhoneXIcon size={16} />}
-                      label="Ringing"
+                      label={m.ringing()}
                       size="small"
                       color="warning"
                       variant="filled"
@@ -555,14 +556,14 @@ function SwipeCaruselBlock({
 
                     <CallInfoGrid container spacing={2}>
                       <Grid item xs={6}>
-                        <StatusLabel>Status</StatusLabel>
+                        <StatusLabel>{m.status()}</StatusLabel>
                         <StatusValue>
-                          {displayCall.callInfo}
+                          {translateCallInfo(displayCall.callInfo)}
                         </StatusValue>
                       </Grid>
 
                       <Grid item xs={6}>
-                        <StatusLabel>Direction</StatusLabel>
+                        <StatusLabel>{m.direction()}</StatusLabel>
                         <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                           {displayCall.direction === 'outgoing' ? (
                             <>
@@ -579,14 +580,14 @@ function SwipeCaruselBlock({
                       </Grid>
 
                       <Grid item xs={6}>
-                        <StatusLabel>Ring Duration</StatusLabel>
+                        <StatusLabel>{m.ring_duration()}</StatusLabel>
                         <StatusValue sx={{ color: 'warning.main', fontWeight: 'bold' }}>
                           {`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}
                         </StatusValue>
                       </Grid>
 
                       <Grid item xs={12}>
-                        <StatusLabel>Number</StatusLabel>
+                        <StatusLabel>{m.number()}</StatusLabel>
                         <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
                           <PhoneIcon size={16} style={{ marginRight: '8px' }} />
                           {displayCall.callNumber}
@@ -602,7 +603,7 @@ function SwipeCaruselBlock({
                 <CallInfoCard >
                   <Chip
                     icon={<DeviceMobileIcon size={16} />}
-                    label="Ready"
+                    label={m.ready()}
                     size="small"
                     color="primary"
                     variant="filled"
@@ -611,9 +612,9 @@ function SwipeCaruselBlock({
 
                   <CallInfoGrid container spacing={2}>
                     <Grid item xs={12}>
-                      <StatusLabel>Status</StatusLabel>
+                      <StatusLabel>{m.status()}</StatusLabel>
                       <StatusValue color="primary"                      >
-                        {displayCall.callInfo} {displayCall.info}
+                        {translateCallInfo(displayCall.callInfo)} {m.channel({ number: displayCall.id + 1 })}
                       </StatusValue>
                     </Grid>
                   </CallInfoGrid>

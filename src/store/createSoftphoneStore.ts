@@ -14,6 +14,7 @@ import {
   logWarn,
 } from '../constants';
 import { parseDialTarget } from '../utils/dial';
+import { m, getSoftphoneLocale, setSoftphoneLocale, translateDialReason } from '../i18n';
 import type { SoftPhoneAssets, SoftPhoneState } from '../types';
 import type {
   DurationState,
@@ -137,6 +138,10 @@ const tickDurations = (
  * state live here so any number of views can subscribe to the same session.
  */
 export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
+  // Apply the requested locale before any message is evaluated. When no `lang`
+  // is given, keep whatever locale is already active (e.g. set by the host).
+  const initialLocale =
+    init.lang !== undefined ? setSoftphoneLocale(init.lang) : getSoftphoneLocale();
   const controller = new CallsFlowControl();
   let media: {
     player: { current: HTMLAudioElement | null };
@@ -168,8 +173,8 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
         const createNotification = () => {
           try {
             const notification = new window.Notification(
-              NOTIFICATION_DEFAULTS.TITLE,
-              { icon: notificationIcon, body: `Caller: ${caller}` },
+              m.notification_title(),
+              { icon: notificationIcon, body: m.notification_caller({ name: caller }) },
             );
             notification.addEventListener('click', () => {
               if (isBrowser()) {
@@ -461,6 +466,7 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
       dialState: '',
       activeChannel: 0,
       bodyTab: 0,
+      locale: initialLocale,
       notification: { open: false, message: '' },
       configDraft: init.config,
       activeConfig: init.config,
@@ -478,11 +484,16 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
         const configChanged =
           hasConfig && serialized !== null && serialized !== lastConfigJson;
         if (configChanged && serialized !== null) lastConfigJson = serialized;
+        const nextLocale =
+          incoming.lang !== undefined
+            ? setSoftphoneLocale(incoming.lang)
+            : undefined;
         set((s) => ({
           props: { ...s.props, ...incoming },
           timelocale: incoming.timelocale ?? s.timelocale,
           asteriskAccounts: incoming.asteriskAccounts ?? s.asteriskAccounts,
           showConfigEditor: incoming.showConfigEditor ?? s.showConfigEditor,
+          ...(nextLocale !== undefined ? { locale: nextLocale } : {}),
           ...(configChanged ? { configDraft: incoming.config } : {}),
         }));
       },
@@ -555,6 +566,7 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
       clearDial: () => set({ dialState: '' }),
       setActiveChannel: (index) => set({ activeChannel: index }),
       setBodyTab: (index) => set({ bodyTab: index }),
+      setLang: (locale) => set({ locale: setSoftphoneLocale(locale) }),
 
       notify: (message) => {
         if (message) set({ notification: { open: true, message } });
@@ -580,11 +592,11 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
       reconnect: () => {
         const draft = get().configDraft;
         const missing: string[] = [];
-        if (!draft.domain) missing.push('domain');
-        if (!draft.uri) missing.push('SIP URI');
-        if (!draft.ws_servers) missing.push('WebSocket server');
+        if (!draft.domain) missing.push(m.domain());
+        if (!draft.uri) missing.push(m.sip_uri());
+        if (!draft.ws_servers) missing.push(m.websocket_server());
         if (missing.length) {
-          get().notify(`Missing config: ${missing.join(', ')}`);
+          get().notify(m.missing_config({ fields: missing.join(', ') }));
           return;
         }
 
@@ -601,7 +613,7 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
           get().props.onConfigChange?.(draft);
         } catch (error) {
           logError('Failed to apply SIP configuration', error);
-          get().notify('Failed to apply SIP configuration');
+          get().notify(m.failed_apply_config());
           patchPhone(() => ({ connectingPhone: false }));
         }
       },
@@ -640,7 +652,9 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
         logInfo('Dial submit', { input: dialState, target });
         if (!target.valid) {
           logError(`Invalid dial input "${dialState}": ${target.reason}`);
-          get().notify(`Invalid number: ${target.reason}`);
+          get().notify(
+            m.invalid_number({ reason: translateDialReason(target.reason) }),
+          );
           return;
         }
         controller.call(dialState);

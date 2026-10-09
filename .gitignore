@@ -8,6 +8,10 @@ dist
 # storybook
 storybook-static
 
+# paraglide generated i18n output
+src/paraglide
+project.inlang/cache
+
 # misc
 .DS_Store
 .env

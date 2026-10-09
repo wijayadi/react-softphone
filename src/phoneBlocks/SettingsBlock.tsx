@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import type { SoftPhoneConfig, SoftPhoneState } from '../types';
 import ConfigBlock from './ConfigBlock';
+import { m } from '../i18n';
 
 export interface SettingsBlockProps {
   localStatePhone: SoftPhoneState;
@@ -172,7 +173,7 @@ function SettingsBlock({
           />
         ) : null}
         <SettingsCard>
-          <SettingHeader>Connection</SettingHeader>
+          <SettingHeader>{m.connection()}</SettingHeader>
           <Divider sx={{ mb: 1 }} />
           <Form>
             <FormGroup>
@@ -189,7 +190,7 @@ function SettingsBlock({
                 label={(
                   <Box display="flex" alignItems="center" gap={0.5}>
                     {localStatePhone.connectOnStart ? <PhoneEnabled fontSize="small" /> : <PhoneDisabled fontSize="small" />}
-                    Auto-Connect
+                    {m.auto_connect()}
                   </Box>
                 )}
                 labelPlacement="start"
@@ -209,7 +210,7 @@ function SettingsBlock({
                   label={(
                     <Box display="flex" alignItems="center" gap={0.5}>
                       {localStatePhone.connectedPhone ? <Call fontSize="small" color="success" /> : <CallEnd fontSize="small" color="error" />}
-                      {localStatePhone.connectedPhone ? 'Connected' : 'Disconnected'}
+                      {localStatePhone.connectedPhone ? m.connected() : m.disconnected()}
                     </Box>
                   )}
                   labelPlacement="start"
@@ -220,7 +221,7 @@ function SettingsBlock({
         </SettingsCard>
 
         <SettingsCard>
-          <SettingHeader>Notifications</SettingHeader>
+          <SettingHeader>{m.notifications()}</SettingHeader>
           <Divider sx={{ mb: 1 }} />
           <Form>
             <FormGroup>
@@ -237,7 +238,7 @@ function SettingsBlock({
                 label={(
                   <Box display="flex" alignItems="center" gap={0.5}>
                     {localStatePhone.notifications ? <NotificationsActive fontSize="small" /> : <NotificationsOff fontSize="small" />}
-                    Notifications
+                    {m.notifications()}
                   </Box>
                 )}
                 labelPlacement="start"
@@ -247,13 +248,13 @@ function SettingsBlock({
         </SettingsCard>
 
         <SettingsCard>
-          <SettingHeader>Volume</SettingHeader>
+          <SettingHeader>{m.volume()}</SettingHeader>
           <Divider sx={{ mb: 1 }} />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {/* Call Audio Volume Control */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'text.primary' }}>
-                Call Audio
+                {m.call_audio()}
               </Typography>
               <SliderContainer>
                 <SliderIcons>
@@ -288,7 +289,7 @@ function SettingsBlock({
             {/* Ringtone Volume Control */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'text.primary' }}>
-                Ringtone
+                {m.ringtone()}
               </Typography>
               <SliderContainer>
                 <SliderIcons>

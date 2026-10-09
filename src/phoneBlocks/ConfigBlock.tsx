@@ -11,6 +11,7 @@ import {
   Typography
 } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
+import { m } from '../i18n';
 import type { SoftPhoneConfig } from '../types';
 
 export interface ConfigBlockProps {
@@ -60,11 +61,11 @@ function ConfigBlock({
   return (
     <Root>
       <SettingsCard>
-        <SettingHeader>SIP Account</SettingHeader>
+        <SettingHeader>{m.sip_account()}</SettingHeader>
         <Divider sx={{ mb: 1 }} />
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <TextField
-            label="Domain"
+            label={m.domain()}
             value={config.domain ?? ''}
             onChange={(event) => onChange('domain', event.target.value)}
             size="small"
@@ -72,7 +73,7 @@ function ConfigBlock({
             autoComplete="off"
           />
           <TextField
-            label="SIP URI"
+            label={m.sip_uri()}
             placeholder="sip:1001@example.com"
             value={config.uri ?? ''}
             onChange={(event) => onChange('uri', event.target.value)}
@@ -81,7 +82,7 @@ function ConfigBlock({
             autoComplete="off"
           />
           <TextField
-            label="WebSocket Server"
+            label={m.websocket_server()}
             placeholder="wss://example.com:8089/ws"
             value={wsServers}
             onChange={(event) => onChange('ws_servers', event.target.value)}
@@ -90,7 +91,7 @@ function ConfigBlock({
             autoComplete="off"
           />
           <TextField
-            label="Password"
+            label={m.password()}
             type="password"
             value={(config.password as string) ?? ''}
             onChange={(event) => onChange('password', event.target.value)}
@@ -99,7 +100,7 @@ function ConfigBlock({
             autoComplete="new-password"
           />
           <TextField
-            label="Display Name"
+            label={m.display_name()}
             value={(config.display_name as string) ?? ''}
             onChange={(event) => onChange('display_name', event.target.value)}
             size="small"
@@ -107,7 +108,7 @@ function ConfigBlock({
             autoComplete="off"
           />
           <TextField
-            label="Session Timers Refresh Method"
+            label={m.session_timers_refresh_method()}
             value={(config.session_timers_refresh_method as string) ?? ''}
             onChange={(event) => onChange('session_timers_refresh_method', event.target.value)}
             size="small"
@@ -124,7 +125,7 @@ function ConfigBlock({
                 size="small"
               />
             )}
-            label="Debug logging"
+            label={m.debug_logging()}
           />
           <Button
             variant="contained"
@@ -135,7 +136,7 @@ function ConfigBlock({
             startIcon={<RefreshIcon />}
             sx={{ mt: 0.5 }}
           >
-            {reconnecting ? 'Reconnecting…' : 'Reconnect'}
+            {reconnecting ? m.reconnecting() : m.reconnect()}
           </Button>
         </Box>
       </SettingsCard>
