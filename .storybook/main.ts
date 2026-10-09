@@ -13,6 +13,12 @@ const config: StorybookConfig = {
     if (viteConfig.build && 'lib' in viteConfig.build) {
       delete (viteConfig.build as { lib?: unknown }).lib;
     }
+    // Optional base path for static hosting under a sub-path (e.g. GitHub
+    // Pages project sites: STORYBOOK_BASE=/<repo>/).
+    const base = process.env.STORYBOOK_BASE;
+    if (base) {
+      viteConfig.base = base;
+    }
     return viteConfig;
   }
 };
