@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import SwipeCaruselBodyBlock from './SwipeCaruselBodyBlock';
-import { createSoftPhoneState, mockCalls, noop } from '../stories/fixtures';
+import { createSoftPhoneState, mockCalls, mockConfig, noop } from '../stories/fixtures';
 
 const meta = {
   title: 'Phone Blocks/SwipeCaruselBodyBlock',
@@ -17,7 +17,11 @@ const meta = {
     handleDarkMode: noop,
     calls: [],
     timelocale: 'UTC',
-    callVolume: 0.8
+    callVolume: 0.8,
+    configDraft: mockConfig,
+    onConfigFieldChange: noop,
+    onReconnect: noop,
+    showConfigEditor: true
   }
 } satisfies Meta<typeof SwipeCaruselBodyBlock>;
 

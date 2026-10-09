@@ -25,7 +25,8 @@ import {
   IconButton,
   Button
 } from '@mui/material';
-import type { SoftPhoneState } from '../types';
+import type { SoftPhoneConfig, SoftPhoneState } from '../types';
+import ConfigBlock from './ConfigBlock';
 
 export interface SettingsBlockProps {
   localStatePhone: SoftPhoneState;
@@ -34,6 +35,16 @@ export interface SettingsBlockProps {
   handleConnectOnStart: (event: React.ChangeEvent<HTMLInputElement>, value: boolean) => void;
   handleNotifications: (event: React.ChangeEvent<HTMLInputElement>, value: boolean) => void;
   handleDarkMode?: (checked: boolean) => void;
+  /** Draft SIP config for the editable account section. */
+  configDraft?: SoftPhoneConfig;
+  /** Called on every SIP config field edit. */
+  onConfigFieldChange?: (field: string, value: string | boolean) => void;
+  /** Apply the draft SIP config and reconnect. */
+  onReconnect?: () => void;
+  /** Disables the Reconnect button while connecting. */
+  reconnecting?: boolean;
+  /** Show the editable SIP account section. Default `true`. */
+  showConfigEditor?: boolean;
 }
 
 const Root = styled('div')(({ theme }) => ({
@@ -136,7 +147,12 @@ function SettingsBlock({
   handleSettingsSlider,
   handleConnectOnStart,
   handleNotifications,
-  handleDarkMode: _handleDarkMode
+  handleDarkMode: _handleDarkMode,
+  configDraft,
+  onConfigFieldChange = () => {},
+  onReconnect = () => {},
+  reconnecting = false,
+  showConfigEditor = true
 }: SettingsBlockProps) {
   // Keep the reference used so consumers/lint don't flag it as unused while
   // preserving the prop in the component's public interface.
@@ -147,6 +163,14 @@ function SettingsBlock({
   return (
     <Root>
       <SettingsContainer>
+        {showConfigEditor && configDraft ? (
+          <ConfigBlock
+            config={configDraft}
+            onChange={onConfigFieldChange}
+            onReconnect={onReconnect}
+            reconnecting={reconnecting}
+          />
+        ) : null}
         <SettingsCard>
           <SettingHeader>Connection</SettingHeader>
           <Divider sx={{ mb: 1 }} />

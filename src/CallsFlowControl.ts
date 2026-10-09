@@ -460,6 +460,27 @@ function CallsFlowControl(this: any) {
     }
   };
 
+  // Tear down the current UA (if any) and bring a fresh one up using the
+  // currently assigned `this.config`. Used by the editable SIP account UI.
+  this.reconnect = () => {
+    try {
+      if (this.phone) {
+        try {
+          this.phone.stop();
+        } catch (e) {
+          debugWarn('Error stopping JsSIP UA during reconnect', e);
+        }
+        this.phone = null;
+      }
+      this.initiated = false;
+      this.init();
+      this.start();
+    } catch (error) {
+      logError('Failed to reconnect JsSIP UA', error);
+      this.notify(`Failed to reconnect: ${(error && (error as Error).message) || error}`);
+    }
+  };
+
   this.stop = () => {
     logInfo('Stopping JsSIP UA');
     this.phone.stop();

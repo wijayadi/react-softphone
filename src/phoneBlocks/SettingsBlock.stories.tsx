@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import SettingsBlock from './SettingsBlock';
-import { createSoftPhoneState, noop } from '../stories/fixtures';
+import { createSoftPhoneState, mockConfig, noop } from '../stories/fixtures';
 
 const meta = {
   title: 'Phone Blocks/SettingsBlock',
@@ -21,7 +21,11 @@ const meta = {
     handleSettingsSlider: noop,
     handleConnectOnStart: noop,
     handleNotifications: noop,
-    handleDarkMode: noop
+    handleDarkMode: noop,
+    configDraft: mockConfig,
+    onConfigFieldChange: noop,
+    onReconnect: noop,
+    showConfigEditor: true
   }
 } satisfies Meta<typeof SettingsBlock>;
 
@@ -51,5 +55,11 @@ export const ConnectedWithNotifications: Story = {
       callVolume: 0.8,
       ringVolume: 0.6
     })
+  }
+};
+
+export const ConfigEditorHidden: Story = {
+  args: {
+    showConfigEditor: false
   }
 };

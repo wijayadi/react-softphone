@@ -86,6 +86,19 @@ export interface SoftPhoneState {
   darkMode: boolean;
 }
 
+/**
+ * URLs/data URIs for the media assets used by the softphone. Every field is
+ * optional and falls back to the built-in defaults.
+ */
+export interface SoftPhoneAssets {
+  /** Incoming call ringtone URL. Defaults to `/sound/ringing.ogg`. */
+  ringingSound?: string;
+  /** Outgoing call ringback tone URL. Defaults to `/sound/ringback.ogg`. */
+  ringbackSound?: string;
+  /** Icon used for browser call notifications. Defaults to the built-in icon. */
+  notificationIcon?: string;
+}
+
 export type LauncherPosition =
   | 'bottom-right'
   | 'bottom-left'
@@ -129,4 +142,10 @@ export interface SoftPhoneProps {
   launcherSize?: LauncherSize;
   /** Color of the built-in launcher. */
   launcherColor?: string;
+  /** Override the media asset URLs (ringtone, ringback tone, notification icon). */
+  assets?: SoftPhoneAssets;
+  /** Show the editable SIP account (config) section in Settings. Default `true`. */
+  showConfigEditor?: boolean;
+  /** Called with the new config after the user applies it via Reconnect. */
+  onConfigChange?: (config: SoftPhoneConfig) => void;
 }

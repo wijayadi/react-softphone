@@ -1,41 +1,11 @@
-import { test, expect, type Page } from '@playwright/test';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { test, expect } from '@playwright/test';
 import { parseDialTarget } from '../../src/utils/dial';
-
-const here = path.dirname(fileURLToPath(import.meta.url));
-const fakeSipPath = path.join(here, '..', 'fake-sip.js');
-
-function collectLogs(page: Page): string[] {
-  const logs: string[] = [];
-  page.on('console', (msg) => logs.push(`[${msg.type()}] ${msg.text()}`));
-  page.on('pageerror', (err) => logs.push(`[pageerror] ${err.message}`));
-  return logs;
-}
-
-async function setupFakeSip(
-  page: Page,
-  opts: { failMedia?: boolean; inviteStatus?: string } = {},
-) {
-  await page.addInitScript((flags: { failMedia?: boolean; inviteStatus?: string }) => {
-    (window as unknown as { __SOFTPHONE_TEST_FAIL_MEDIA__: boolean }).__SOFTPHONE_TEST_FAIL_MEDIA__ =
-      !!flags.failMedia;
-    if (flags.inviteStatus) {
-      (window as unknown as { __SOFTPHONE_TEST_INVITE_STATUS__: string }).__SOFTPHONE_TEST_INVITE_STATUS__ =
-        flags.inviteStatus;
-    }
-  }, opts);
-  await page.addInitScript({ path: fakeSipPath });
-}
-
-async function waitForLog(page: Page, logs: string[], needle: string) {
-  await expect
-    .poll(() => logs.join('\n'), { timeout: 20_000, message: `waiting for log: ${needle}` })
-    .toContain(needle);
-}
-
-const callButton = (page: Page) =>
-  page.getByRole('button', { name: 'Make Call' }).first();
+import {
+  callButton,
+  collectLogs,
+  setupFakeSip,
+  waitForLog,
+} from './helpers';
 
 // ---------------------------------------------------------------------------
 // Pure parsing unit tests (also used by the component at runtime)

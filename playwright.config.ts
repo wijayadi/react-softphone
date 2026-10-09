@@ -23,7 +23,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:5199',
     channel,
-    permissions: ['microphone'],
+    permissions: ['microphone', 'notifications'],
     launchOptions: {
       args: [
         '--use-fake-device-for-media-stream',

@@ -21,7 +21,7 @@ import {
 import { DateTime } from 'luxon';
 
 import SettingsBlock from './SettingsBlock';
-import type { CallLogEntry, SoftPhoneState } from '../types';
+import type { CallLogEntry, SoftPhoneConfig, SoftPhoneState } from '../types';
 
 export interface SwipeCaruselBodyBlockProps {
   localStatePhone: SoftPhoneState;
@@ -34,6 +34,16 @@ export interface SwipeCaruselBodyBlockProps {
   timelocale: string;
   /** Accepted for interface compatibility; not used by this block. */
   callVolume?: number;
+  /** Draft SIP config for the editable account section. */
+  configDraft?: SoftPhoneConfig;
+  /** Called on every SIP config field edit. */
+  onConfigFieldChange?: (field: string, value: string | boolean) => void;
+  /** Apply the draft SIP config and reconnect. */
+  onReconnect?: () => void;
+  /** Disables the Reconnect button while connecting. */
+  reconnecting?: boolean;
+  /** Show the editable SIP account section. Default `true`. */
+  showConfigEditor?: boolean;
 }
 
 type TabPanelProps = Omit<React.ComponentProps<typeof Typography>, 'children' | 'component' | 'ref'> & {
@@ -152,7 +162,12 @@ function SwipeCaruselBodyBlock({
   handleNotifications,
   handleDarkMode,
   calls,
-  timelocale
+  timelocale,
+  configDraft,
+  onConfigFieldChange,
+  onReconnect,
+  reconnecting,
+  showConfigEditor
 }: SwipeCaruselBodyBlockProps) {
   const [value, setValue] = useState(0);
 
@@ -194,6 +209,11 @@ function SwipeCaruselBodyBlock({
             handleConnectOnStart={handleConnectOnStart}
             handleNotifications={handleNotifications}
             handleDarkMode={handleDarkMode}
+            configDraft={configDraft}
+            onConfigFieldChange={onConfigFieldChange}
+            onReconnect={onReconnect}
+            reconnecting={reconnecting}
+            showConfigEditor={showConfigEditor}
           />
         </TabStyled>
       </TabPanel>

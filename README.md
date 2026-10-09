@@ -279,7 +279,7 @@ All dependencies are bundled with the package.
 | `setSoftPhoneOpen` | Function | `() => {}` | Callback when softphone opens/closes |
 | `callVolume` | Number | `0.5` | Call audio volume (0-1) |
 | `ringVolume` | Number | `0.5` | Ring audio volume (0-1) |
-| `connectOnStart` | Boolean | `false` | Auto-connect on component mount |
+| `connectOnStart` | Boolean | `true` | Auto-connect on component mount |
 | `notifications` | Boolean | `true` | Show browser notifications for calls |
 | `timelocale` | String | `'UTC'` | Timezone for call history |
 | `asteriskAccounts` | Array | `[]` | List of available accounts for transfer |
@@ -287,6 +287,9 @@ All dependencies are bundled with the package.
 | `launcherPosition` | String | `'bottom-right'` | Launcher position (`'bottom-right'`, `'bottom-left'`, etc.) |
 | `launcherSize` | String | `'medium'` | Launcher size (`'small'`, `'medium'`, `'large'`) |
 | `launcherColor` | String | `'primary'` | Launcher color theme |
+| `assets` | Object | `undefined` | Override media asset URLs (see below) |
+| `showConfigEditor` | Boolean | `true` | Show the editable SIP account section in Settings |
+| `onConfigChange` | Function | `undefined` | Called with the new config after the user clicks Reconnect |
 
 ### Config Object
 
@@ -306,6 +309,30 @@ const config = {
   session_timers_refresh_method: 'invite'
 };
 ```
+
+## 🛠️ SIP Account Editor
+
+The Settings tab includes a fully editable **SIP Account** section (domain, SIP
+URI, WebSocket server, password, display name, session timers refresh method,
+and debug logging). Editing a field updates a local draft; clicking **Reconnect**
+applies the draft and restarts the SIP transport.
+
+```jsx
+<SoftPhone
+  config={config}
+  // Persist whatever the user applies (e.g. to localStorage / your backend)
+  onConfigChange={(nextConfig) => saveConfig(nextConfig)}
+  // Hide the editor entirely (read-only config)
+  showConfigEditor={false}
+  // ... other props
+/>
+```
+
+- `showConfigEditor` (default `true`) — set to `false` to hide the section.
+- `onConfigChange` — called with the applied `config` after a successful
+  reconnect; it does not auto-start a connection by itself.
+- `connectOnStart` now defaults to `true`, so the component connects on mount
+  unless you explicitly pass `connectOnStart={false}`.
 
 ## 🎵 Audio Files
 
@@ -331,6 +358,29 @@ The softphone includes an optional floating launcher button:
 Available positions: `bottom-right`, `bottom-left`, `top-right`, `top-left`
 Available sizes: `small`, `medium`, `large`
 Available colors: `primary`, `secondary`, `success`, `error`, `warning`, `info`
+
+## 🔊 Media Assets
+
+The audio files and notification icon can be overridden with the optional
+`assets` prop. Any omitted field keeps its current default.
+
+```jsx
+<SoftPhone
+  config={config}
+  assets={{
+    ringingSound: '/custom/ringing.ogg',   // default: /sound/ringing.ogg
+    ringbackSound: '/custom/ringback.ogg', // default: /sound/ringback.ogg
+    notificationIcon: '/custom/icon.png',  // default: built-in data URI icon
+  }}
+  // ... other props
+/>
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ringingSound` | String | `/sound/ringing.ogg` | Incoming call ringtone |
+| `ringbackSound` | String | `/sound/ringback.ogg` | Outgoing call ringback tone |
+| `notificationIcon` | String | built-in data URI | Browser notification icon |
 
 ## 📞 Call Features
 
@@ -407,9 +457,22 @@ component is browsable and testable in Storybook.
 
 Playwright end-to-end tests live in `e2e/`. They run the real component in a
 browser through a small Vite harness (`e2e/harness`) with a fake SIP-over-
-WebSocket (`e2e/fake-sip.js`), so no SIP server is required. They cover dial
-target parsing (e.g. `1000@10.13.13.77` is not double-suffixed), the outgoing
-INVITE URI, and that call/media failures are surfaced to the console and UI.
+WebSocket (`e2e/fake-sip.js`), so no SIP server is required.
+
+The harness accepts query-string switches (e.g.
+`/?builtInLauncher=1&showConfigEditor=0&connectOnStart=0`) so the suites can
+exercise prop variations. Coverage includes:
+
+- **`softphone.spec.ts`** – dial target parsing, the outgoing INVITE URI, and
+  microphone / SIP failure surfacing.
+- **`navigation.spec.ts`** – drawer open/close, the built-in launcher, channel
+  tabs, and the Settings/History tabs.
+- **`settings.spec.ts`** – the editable SIP account form, reconnect +
+  `onConfigChange`, field validation, auto-connect/notifications toggles, the
+  connection switch, and the volume sliders.
+- **`keypad.spec.ts`** – control enabled/disabled states, clearing the dialer,
+  Enter-to-call, validation errors, mute, hang-up + call history, and online /
+  offline status.
 
 ```bash
 # Uses the locally installed Google Chrome (channel: 'chrome')

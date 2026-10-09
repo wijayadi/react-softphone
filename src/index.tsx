@@ -29,12 +29,13 @@ import SwipeCaruselBodyBlock from './phoneBlocks/SwipeCaruselBodyBlock';
 import StatusBlock from './phoneBlocks/status-block';
 import CallQueue from './phoneBlocks/call-queue';
 import CallsFlowControl from './CallsFlowControl';
-import { NOTIFICATION_DEFAULTS, debugLog, debugError, debugWarn, hasNotificationAPI, isBrowser, logInfo, logWarn, logError } from './constants';
+import { AUDIO_PATHS, NOTIFICATION_DEFAULTS, debugLog, debugError, debugWarn, hasNotificationAPI, isBrowser, logInfo, logWarn, logError } from './constants';
 import { parseDialTarget } from './utils/dial';
 import type {
   CallLogEntry,
   LauncherPosition,
   LauncherSize,
+  SoftPhoneConfig,
   SoftPhoneProps,
   SoftPhoneState,
 } from './types';
@@ -177,7 +178,7 @@ const LauncherFab = styled(Fab)<{ position: LauncherPosition; size: LauncherSize
 function SoftPhone({ 
   timelocale,
   setConnectOnStartToLocalStorage = () => {},
-  connectOnStart,
+  connectOnStart = true,
   asteriskAccounts,
   setNotifications = () => {},
   notifications,
@@ -192,12 +193,40 @@ function SoftPhone({
   launcherPosition = 'bottom-right',
   launcherSize = 'medium',
   launcherColor = 'primary',
+  assets,
+  showConfigEditor = true,
+  onConfigChange,
 }: SoftPhoneProps) {
   const player = useRef<HTMLAudioElement | null>(null);
   const ringer = useRef<HTMLAudioElement | null>(null);
 
   // Built-in launcher state
   const [launcherOpen, setLauncherOpen] = useState(false);
+
+  // Media assets — configurable via the `assets` prop, falling back to the
+  // built-in defaults so existing integrations keep working unchanged.
+  const {
+    ringingSound = AUDIO_PATHS.RINGING,
+    ringbackSound = AUDIO_PATHS.RINGBACK,
+    notificationIcon = NOTIFICATION_DEFAULTS.ICON,
+  } = assets ?? {};
+
+  // Editable SIP configuration. `configDraft` backs the Settings form while
+  // `activeConfigRef` holds the config actually applied to the UA (used for
+  // dialing and by the mount effect).
+  const [configDraft, setConfigDraft] = useState<SoftPhoneConfig>(config);
+  const activeConfigRef = useRef<SoftPhoneConfig>(config);
+  const lastAppliedConfigRef = useRef<string>(JSON.stringify(config));
+
+  // Sync the form when the host passes a genuinely different config object,
+  // without clobbering in-progress edits on every render.
+  useEffect(() => {
+    const serialized = JSON.stringify(config);
+    if (serialized !== lastAppliedConfigRef.current) {
+      lastAppliedConfigRef.current = serialized;
+      setConfigDraft(config);
+    }
+  }, [config]);
 
   const defaultSoftPhoneState: SoftPhoneState = {
     displayCalls: [
@@ -268,7 +297,7 @@ function SoftPhone({
         sessionId: ''
       }
     ],
-    connectOnStart: connectOnStart as boolean,
+    connectOnStart: connectOnStart,
     notifications: notifications as boolean,
     phoneCalls: [],
     connectedPhone: false,
@@ -429,7 +458,7 @@ function SoftPhone({
             try {
               debugLog('Creating notification - permission already granted')
               const notification = new window.Notification(NOTIFICATION_DEFAULTS.TITLE, {
-                icon: NOTIFICATION_DEFAULTS.ICON,
+                icon: notificationIcon,
                 body: `Caller: ${(payload.remote_identity.display_name !== '') ? `${payload.remote_identity.display_name || ''}` : payload.remote_identity.uri.user}`
               });
               
@@ -457,7 +486,7 @@ function SoftPhone({
                 try {
                   debugLog('Creating notification after permission granted')
                   const notification = new window.Notification(NOTIFICATION_DEFAULTS.TITLE, {
-                    icon: NOTIFICATION_DEFAULTS.ICON,
+                    icon: notificationIcon,
                     body: `Caller: ${(payload.remote_identity.display_name !== '') ? `${payload.remote_identity.display_name || ''}` : payload.remote_identity.uri.user}`
                   });
                   
@@ -673,6 +702,54 @@ function SoftPhone({
         break;
     }
   };
+
+  // --- Editable SIP configuration -------------------------------------------
+  const handleConfigFieldChange = (field: string, value: string | boolean) => {
+    setConfigDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleReconnect = () => {
+    const draft = configDraft;
+    const missing: string[] = [];
+    if (!draft.domain) missing.push('domain');
+    if (!draft.uri) missing.push('SIP URI');
+    if (!draft.ws_servers) missing.push('WebSocket server');
+    if (missing.length) {
+      notify(`Missing config: ${missing.join(', ')}`);
+      return;
+    }
+    if (!flowRoute) {
+      logError('Cannot reconnect: flowRoute is not available');
+      return;
+    }
+
+    activeConfigRef.current = draft;
+    lastAppliedConfigRef.current = JSON.stringify(draft);
+    setLocalStatePhone((prevState) => ({
+      ...prevState,
+      connectingPhone: true,
+      connectedPhone: false
+    }));
+
+    try {
+      flowRoute.config = {
+        ...draft,
+        sockets: new WebSocketInterface(draft.ws_servers as string)
+      };
+      flowRoute.reconnect();
+      if (onConfigChange) {
+        onConfigChange(draft);
+      }
+    } catch (error) {
+      logError('Failed to apply SIP configuration', error);
+      notify('Failed to apply SIP configuration');
+      setLocalStatePhone((prevState) => ({
+        ...prevState,
+        connectingPhone: false
+      }));
+    }
+  };
+
   const handleConnectPhone = (event: any, connectionStatus: boolean) => {
     try {
       if (event) {
@@ -746,7 +823,7 @@ function SoftPhone({
       logError('Cannot place call: flowRoute is not available');
       return;
     }
-    const target = parseDialTarget(dialState, config && config.domain);
+    const target = parseDialTarget(dialState, activeConfigRef.current && activeConfigRef.current.domain);
     logInfo('Dial submit', { input: dialState, target });
     if (!target.valid) {
       logError(`Invalid dial input "${dialState}": ${target.reason}`);
@@ -903,8 +980,8 @@ function SoftPhone({
   useEffect(() => {
     if (flowRoute) {
       flowRoute.config = {
-        ...config,
-        sockets: new WebSocketInterface(config.ws_servers as string)
+        ...activeConfigRef.current,
+        sockets: new WebSocketInterface(activeConfigRef.current.ws_servers as string)
       };
       flowRoute.init();
       if (localStatePhone.connectOnStart) {
@@ -924,7 +1001,7 @@ function SoftPhone({
       if (flowRoute) {
         flowRoute.player = player;
       }
-      ringer.current!.src = '/sound/ringing.ogg';
+      ringer.current!.src = ringingSound;
       ringer.current!.loop = true;
       
       const safeRingVolume = localStatePhone.ringVolume ? 
@@ -934,7 +1011,7 @@ function SoftPhone({
       if (flowRoute) {
         flowRoute.ringer = ringer;
         // Add a new element for the "beep beep" ringback tone
-        const ringbackTone = new Audio('/sound/ringback.ogg');
+        const ringbackTone = new Audio(ringbackSound);
         ringbackTone.loop = true;
         ringbackTone.volume = safeRingVolume;
         flowRoute.ringbackTone = ringbackTone; // Attach it to the flowRoute object
@@ -1119,6 +1196,11 @@ function SoftPhone({
                 calls={calls}
                 timelocale={timelocale as string}
                 callVolume={callVolume}
+                configDraft={configDraft}
+                onConfigFieldChange={handleConfigFieldChange}
+                onReconnect={handleReconnect}
+                reconnecting={localStatePhone.connectingPhone}
+                showConfigEditor={showConfigEditor}
               />
             </Box>
           </Box>
@@ -1151,6 +1233,7 @@ export default SoftPhone;
 export type {
   SoftPhoneProps,
   SoftPhoneConfig,
+  SoftPhoneAssets,
   SoftPhoneState,
   DisplayCall,
   PhoneCall,

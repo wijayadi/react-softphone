@@ -21,7 +21,8 @@ const meta = {
     setConnectOnStartToLocalStorage: noop,
     setNotifications: noop,
     setCallVolume: noop,
-    setRingVolume: noop
+    setRingVolume: noop,
+    onConfigChange: noop
   }
 } satisfies Meta<typeof SoftPhone>;
 
@@ -49,5 +50,21 @@ export const WithBuiltInLauncher: Story = {
 export const WithTransferAccounts: Story = {
   args: {
     asteriskAccounts: mockAccounts
+  }
+};
+
+export const CustomAssets: Story = {
+  args: {
+    assets: {
+      ringingSound: '/custom/ringing.ogg',
+      ringbackSound: '/custom/ringback.ogg',
+      notificationIcon: '/custom/icon.png'
+    }
+  }
+};
+
+export const ConfigEditorHidden: Story = {
+  args: {
+    showConfigEditor: false
   }
 };

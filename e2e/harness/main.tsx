@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import SoftPhone from '../../src/index';
-import type { SoftPhoneConfig } from '../../src/types';
+import type { AsteriskAccount, SoftPhoneConfig } from '../../src/types';
 
 // Deterministic config for tests. The real WebSocket is replaced by e2e/fake-sip.js.
 const config: SoftPhoneConfig = {
@@ -14,28 +14,80 @@ const config: SoftPhoneConfig = {
   session_timers_refresh_method: 'invite',
 };
 
+// Query-string switches so a single harness can cover the component's prop
+// variations (launcher, hidden config editor, offline mode, etc.).
+const params = new URLSearchParams(window.location.search);
+const flag = (key: string, fallback: boolean): boolean => {
+  const value = params.get(key);
+  if (value === null) return fallback;
+  return value === '1' || value === 'true';
+};
+
+const initial = {
+  softPhoneOpen: flag('softPhoneOpen', true),
+  builtInLauncher: flag('builtInLauncher', false),
+  showConfigEditor: flag('showConfigEditor', true),
+  connectOnStart: flag('connectOnStart', true),
+  notifications: flag('notifications', false),
+};
+
+const sampleAccounts: AsteriskAccount[] = [
+  { accountId: '1001', label: 'Reception', online: 1 },
+  { accountId: '1002', label: 'Support', online: 0 },
+];
+
+// Exposed to Playwright so tests can assert callback wiring without relying
+// purely on DOM state.
+(window as unknown as { __test: Record<string, unknown> }).__test = {
+  configChanges: [],
+  softPhoneOpen: initial.softPhoneOpen,
+  connectOnStart: initial.connectOnStart,
+  notifications: initial.notifications,
+  callVolume: 0.5,
+  ringVolume: 0.5,
+};
+
 function Harness() {
-  const [softPhoneOpen, setSoftPhoneOpen] = useState(true);
-  const [callVolume] = useState(0.5);
-  const [ringVolume] = useState(0.5);
-  const [notifications] = useState(false);
-  const [connectOnStart] = useState(true);
+  const [softPhoneOpen, setSoftPhoneOpen] = useState(initial.softPhoneOpen);
+  const [callVolume, setCallVolume] = useState(0.5);
+  const [ringVolume, setRingVolume] = useState(0.5);
+  const [notifications, setNotifications] = useState(initial.notifications);
+  const [connectOnStart, setConnectOnStart] = useState(initial.connectOnStart);
 
   return (
     <SoftPhone
       softPhoneOpen={softPhoneOpen}
-      setSoftPhoneOpen={setSoftPhoneOpen}
+      setSoftPhoneOpen={(open) => {
+        (window as unknown as { __test: Record<string, unknown> }).__test.softPhoneOpen = open;
+        setSoftPhoneOpen(open);
+      }}
       callVolume={callVolume}
       ringVolume={ringVolume}
       connectOnStart={connectOnStart}
       notifications={notifications}
       config={config}
-      setConnectOnStartToLocalStorage={() => {}}
-      setNotifications={() => {}}
-      setCallVolume={() => {}}
-      setRingVolume={() => {}}
-      builtInLauncher={false}
-      asteriskAccounts={[]}
+      setConnectOnStartToLocalStorage={(value) => {
+        (window as unknown as { __test: Record<string, unknown> }).__test.connectOnStart = value;
+        setConnectOnStart(value);
+      }}
+      setNotifications={(value) => {
+        (window as unknown as { __test: Record<string, unknown> }).__test.notifications = value;
+        setNotifications(value);
+      }}
+      setCallVolume={(value) => {
+        (window as unknown as { __test: Record<string, unknown> }).__test.callVolume = value;
+        setCallVolume(value);
+      }}
+      setRingVolume={(value) => {
+        (window as unknown as { __test: Record<string, unknown> }).__test.ringVolume = value;
+        setRingVolume(value);
+      }}
+      onConfigChange={(next) => {
+        ((window as unknown as { __test: { configChanges: SoftPhoneConfig[] } }).__test.configChanges).push(next);
+      }}
+      builtInLauncher={initial.builtInLauncher}
+      showConfigEditor={initial.showConfigEditor}
+      asteriskAccounts={sampleAccounts}
       timelocale="UTC"
     />
   );
