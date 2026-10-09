@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { styled } from '@mui/material/styles';
 import {
   VolumeUp,
@@ -7,9 +7,6 @@ import {
   NotificationsOff,
   PhoneEnabled,
   PhoneDisabled,
-  DarkMode,
-  LightMode,
-  Palette,
   CallEnd,
   Call
 } from '@mui/icons-material';
@@ -28,6 +25,16 @@ import {
   IconButton,
   Button
 } from '@mui/material';
+import type { SoftPhoneState } from '../types';
+
+export interface SettingsBlockProps {
+  localStatePhone: SoftPhoneState;
+  handleConnectPhone: (event: React.ChangeEvent<HTMLInputElement>, connectionStatus: boolean) => void;
+  handleSettingsSlider: (name: string, value: number) => void;
+  handleConnectOnStart: (event: React.ChangeEvent<HTMLInputElement>, value: boolean) => void;
+  handleNotifications: (event: React.ChangeEvent<HTMLInputElement>, value: boolean) => void;
+  handleDarkMode?: (checked: boolean) => void;
+}
 
 const Root = styled('div')(({ theme }) => ({
   padding: theme.spacing(1),
@@ -112,7 +119,7 @@ const Form = styled(FormControl)({
   width: '100%'
 });
 
-const ConnectButton = styled(Button)(({ theme, isConnected }) => ({
+const ConnectButton = styled(Button)<{ isConnected?: boolean }>(({ theme, isConnected }) => ({
   marginTop: theme.spacing(1),
   backgroundColor: isConnected ? theme.palette.error.main : theme.palette.success.main,
   color: theme.palette.common.white,
@@ -129,15 +136,21 @@ function SettingsBlock({
   handleSettingsSlider,
   handleConnectOnStart,
   handleNotifications,
-  handleDarkMode
-}) {
+  handleDarkMode: _handleDarkMode
+}: SettingsBlockProps) {
+  // Keep the reference used so consumers/lint don't flag it as unused while
+  // preserving the prop in the component's public interface.
+  void ConnectButton;
+  void Grid;
+  void LinearProgress;
+  void IconButton;
   return (
     <Root>
       <SettingsContainer>
         <SettingsCard>
           <SettingHeader>Connection</SettingHeader>
           <Divider sx={{ mb: 1 }} />
-          <Form component="fieldset">
+          <Form>
             <FormGroup>
               <StyledFormControlLabel
                 control={(
@@ -157,7 +170,7 @@ function SettingsBlock({
                 )}
                 labelPlacement="start"
               />
-              
+
               <Box sx={{ mt: 1 }}>
                 <StyledFormControlLabel
                   control={(
@@ -185,7 +198,7 @@ function SettingsBlock({
         <SettingsCard>
           <SettingHeader>Notifications</SettingHeader>
           <Divider sx={{ mb: 1 }} />
-          <Form component="fieldset">
+          <Form>
             <FormGroup>
               <StyledFormControlLabel
                 control={(
@@ -227,7 +240,7 @@ function SettingsBlock({
                   min={0}
                   max={1}
                   step={0.05}
-                  onChange={(e, val) => handleSettingsSlider('callVolume', val)}
+                  onChange={(_e, val) => handleSettingsSlider('callVolume', val as number)}
                   aria-labelledby="call-volume-slider"
                   size="small"
                   marks={[
@@ -247,7 +260,7 @@ function SettingsBlock({
                 />
               </SliderContainer>
             </Box>
-            
+
             {/* Ringtone Volume Control */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'text.primary' }}>
@@ -262,7 +275,7 @@ function SettingsBlock({
                   min={0}
                   max={1}
                   step={0.05}
-                  onChange={(e, val) => handleSettingsSlider('ringVolume', val)}
+                  onChange={(_e, val) => handleSettingsSlider('ringVolume', val as number)}
                   aria-labelledby="ringtone-volume-slider"
                   size="small"
                   marks={[

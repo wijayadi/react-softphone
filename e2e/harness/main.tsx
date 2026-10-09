@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import SoftPhone from '../../src/index.jsx';
+import SoftPhone from '../../src/index';
+import type { SoftPhoneConfig } from '../../src/types';
 
 // Deterministic config for tests. The real WebSocket is replaced by e2e/fake-sip.js.
-const config = {
+const config: SoftPhoneConfig = {
   domain: '127.0.0.1',
   uri: 'sip:1000@127.0.0.1',
   password: 'test-secret',
@@ -40,4 +41,4 @@ function Harness() {
   );
 }
 
-createRoot(document.getElementById('root')).render(<Harness />);
+createRoot(document.getElementById('root')!).render(<Harness />);

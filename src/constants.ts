@@ -32,32 +32,32 @@ export const CONNECTION_STATES = {
 };
 
 // Environment detection utilities
-export const isBrowser = () => {
+export const isBrowser = (): boolean => {
   return typeof window !== 'undefined' && typeof window.document !== 'undefined';
 };
 
-export const isReactNative = () => {
-  return typeof navigator !== 'undefined' && navigator.product === 'ReactNative';
+export const isReactNative = (): boolean => {
+  return typeof navigator !== 'undefined' && (navigator as { product?: string }).product === 'ReactNative';
 };
 
-export const hasNotificationAPI = () => {
+export const hasNotificationAPI = (): boolean => {
   return isBrowser() && 'Notification' in window;
 };
 
 // Debug logging utility
-export const debugLog = (message, ...args) => {
+export const debugLog = (message: string, ...args: unknown[]): void => {
   if (isBrowser() && window.__SOFTPHONE_DEBUG__) {
     console.log(`[SoftPhone] ${message}`, ...args);
   }
 };
 
-export const debugError = (message, ...args) => {
+export const debugError = (message: string, ...args: unknown[]): void => {
   if (isBrowser() && window.__SOFTPHONE_DEBUG__) {
     console.error(`[SoftPhone] ${message}`, ...args);
   }
 };
 
-export const debugWarn = (message, ...args) => {
+export const debugWarn = (message: string, ...args: unknown[]): void => {
   if (isBrowser() && window.__SOFTPHONE_DEBUG__) {
     console.warn(`[SoftPhone] ${message}`, ...args);
   }
@@ -68,29 +68,41 @@ export const debugWarn = (message, ...args) => {
 // needing window.__SOFTPHONE_DEBUG__.
 const PRE = '[SoftPhone]';
 
-export const logInfo = (message, ...args) => {
+export const logInfo = (message: string, ...args: unknown[]): void => {
   console.log(`${PRE} ${message}`, ...args);
 };
 
-export const logWarn = (message, ...args) => {
+export const logWarn = (message: string, ...args: unknown[]): void => {
   console.warn(`${PRE} ${message}`, ...args);
 };
 
-export const logError = (message, ...args) => {
+export const logError = (message: string, ...args: unknown[]): void => {
   console.error(`${PRE} ${message}`, ...args);
 };
 
+export interface SipEventDescription {
+  originator: string;
+  cause: string;
+  response: string;
+}
+
 // Build a human readable description of a JsSIP session/UA event payload.
-export const describeSipEvent = (data) => {
+export const describeSipEvent = (data: unknown): SipEventDescription => {
   if (!data || typeof data !== 'object') {
     return { originator: 'unknown', cause: String(data ?? ''), response: '' };
   }
-  const originator = data.originator || 'unknown';
-  const cause = data.cause || 'unknown';
-  const responseMessage = data.message && data.message.status_code
-    ? data.message
-    : data.response && data.response.status_code
-      ? data.response
+  const event = data as {
+    originator?: string;
+    cause?: string;
+    message?: { status_code?: number; reason_phrase?: string };
+    response?: { status_code?: number; reason_phrase?: string };
+  };
+  const originator = event.originator || 'unknown';
+  const cause = event.cause || 'unknown';
+  const responseMessage = event.message && event.message.status_code
+    ? event.message
+    : event.response && event.response.status_code
+      ? event.response
       : null;
   const response = responseMessage
     ? `${responseMessage.status_code} ${

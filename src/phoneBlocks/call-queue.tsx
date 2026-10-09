@@ -4,6 +4,13 @@ import {
 import React from 'react';
 import { styled } from '@mui/material/styles';
 import { Call, CallEnd } from '@mui/icons-material';
+import type { PhoneCall } from '../types';
+
+export interface CallQueueProps {
+  calls: PhoneCall[];
+  handleAnswer: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  handleReject: (event: React.MouseEvent<HTMLButtonElement>) => void;
+}
 
 const Root = styled('div')({
   alignItems: 'center',
@@ -68,7 +75,7 @@ const CallItem = styled(Paper)(({ theme }) => ({
     : '0 2px 6px rgba(0, 0, 0, 0.1)'
 }));
 
-function CallQueue({ calls, handleAnswer, handleReject }) {
+function CallQueue({ calls, handleAnswer, handleReject }: CallQueueProps) {
   return (
     <Root>
       {calls.map((call) => {
@@ -78,14 +85,14 @@ function CallQueue({ calls, handleAnswer, handleReject }) {
             <Box sx={{ mb: 2, pb: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
               {parsedCaller[0] && (
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Caller variant="h6" component="div">
+                  <Caller variant="h6">
                     Caller: <Box component="span" sx={{ ml: 1, fontWeight: 600, color: 'primary.main' }}>
                       {parsedCaller[0]}
                     </Box>
                   </Caller>
                 </Box>
               )}
-              
+
               <Box sx={{ mt: 1 }}>
                 {parsedCaller[1] && (
                   <Box sx={{ mb: 1 }}>
@@ -97,7 +104,7 @@ function CallQueue({ calls, handleAnswer, handleReject }) {
                     </CallerSmall>
                   </Box>
                 )}
-                
+
                 {parsedCaller[2] && (
                   <Box>
                     <CallerSmall variant="body2" color="text.secondary">
@@ -113,12 +120,12 @@ function CallQueue({ calls, handleAnswer, handleReject }) {
 
             <Grid container spacing={2} justifyContent="center" alignItems="center" sx={{ mt: 1 }}>
               <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <AnswerButton 
-                  size="medium" 
-                  onClick={handleAnswer} 
+                <AnswerButton
+                  size="medium"
+                  onClick={handleAnswer}
                   value={call.sessionId}
                   aria-label="Answer Call"
-                  sx={{ 
+                  sx={{
                     transition: 'transform 0.2s ease-in-out',
                     '&:hover': { transform: 'scale(1.05)' }
                   }}
@@ -127,12 +134,12 @@ function CallQueue({ calls, handleAnswer, handleReject }) {
                 </AnswerButton>
               </Grid>
               <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <RejectButton 
-                  size="medium" 
-                  onClick={handleReject} 
+                <RejectButton
+                  size="medium"
+                  onClick={handleReject}
                   value={call.sessionId}
                   aria-label="Reject Call"
-                  sx={{ 
+                  sx={{
                     transition: 'transform 0.2s ease-in-out',
                     '&:hover': { transform: 'scale(1.05)' }
                   }}

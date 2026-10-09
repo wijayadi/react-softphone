@@ -15,7 +15,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@sengsara/react-softphone': path.resolve(dirname, '../../src/index.jsx'),
+      '@sengsara/react-softphone': path.resolve(dirname, '../../src/index.tsx'),
     },
     // Ensure the component and the app share a single React instance.
     dedupe: ['react', 'react-dom'],

@@ -9,10 +9,11 @@ import {
   Divider,
   AppBar
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { styled } from '@mui/material/styles';
-import { 
-  AccessTime, 
-  CallMade as CallMadeIcon, 
+import {
+  AccessTime,
+  CallMade as CallMadeIcon,
   CallReceived as CallReceivedIcon,
   Settings as SettingsIcon,
   History as HistoryIcon
@@ -20,8 +21,29 @@ import {
 import { DateTime } from 'luxon';
 
 import SettingsBlock from './SettingsBlock';
+import type { CallLogEntry, SoftPhoneState } from '../types';
 
-function TabPanel(props) {
+export interface SwipeCaruselBodyBlockProps {
+  localStatePhone: SoftPhoneState;
+  handleConnectPhone: (event: React.ChangeEvent<HTMLInputElement>, connectionStatus: boolean) => void;
+  handleSettingsSlider: (name: string, value: number) => void;
+  handleConnectOnStart: (event: React.ChangeEvent<HTMLInputElement>, value: boolean) => void;
+  handleNotifications: (event: React.ChangeEvent<HTMLInputElement>, value: boolean) => void;
+  handleDarkMode: (checked: boolean) => void;
+  calls: CallLogEntry[];
+  timelocale: string;
+  /** Accepted for interface compatibility; not used by this block. */
+  callVolume?: number;
+}
+
+type TabPanelProps = Omit<React.ComponentProps<typeof Typography>, 'children' | 'component' | 'ref'> & {
+  children?: React.ReactNode;
+  value: number;
+  index: number;
+  sx?: SxProps<Theme>;
+};
+
+function TabPanel(props: TabPanelProps) {
   const {
     children, value, index, sx, ...other
   } = props;
@@ -41,7 +63,7 @@ function TabPanel(props) {
   );
 }
 
-function a11yProps(index) {
+function a11yProps(index: number) {
   return {
     id: `full-width-tab-${index}`,
     'aria-controls': `full-width-tabpanel-${index}`
@@ -98,7 +120,7 @@ const UlStyled = styled('ul')({
 
 const TabStyled = styled('div')(({ theme }) => ({
   padding: theme.spacing(1),
-  overflow: 'visible', 
+  overflow: 'visible',
   flexGrow: 1,
   display: 'flex',
   flexDirection: 'column'
@@ -131,10 +153,10 @@ function SwipeCaruselBodyBlock({
   handleDarkMode,
   calls,
   timelocale
-}) {
+}: SwipeCaruselBodyBlockProps) {
   const [value, setValue] = useState(0);
 
-  const handleChange = (event, newValue) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
@@ -191,16 +213,16 @@ function SwipeCaruselBodyBlock({
                 <ListSectionStyled key={`section-${sessionId}`} className="listSection">
                   <CallLogPaper>
                     <UlStyled className="ul">
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        p: 0.5 
+                      <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        p: 0.5
                       }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="subtitle2" 
-                            sx={{ 
-                              fontWeight: 500, 
+                          <Typography variant="subtitle2"
+                            sx={{
+                              fontWeight: 500,
                               color: status === 'missed' ? 'error.main' : 'success.main',
                               fontSize: '0.875rem',
                               display: 'flex',

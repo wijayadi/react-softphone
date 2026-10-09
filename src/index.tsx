@@ -31,6 +31,13 @@ import CallQueue from './phoneBlocks/call-queue';
 import CallsFlowControl from './CallsFlowControl';
 import { NOTIFICATION_DEFAULTS, debugLog, debugError, debugWarn, hasNotificationAPI, isBrowser, logInfo, logWarn, logError } from './constants';
 import { parseDialTarget } from './utils/dial';
+import type {
+  CallLogEntry,
+  LauncherPosition,
+  LauncherSize,
+  SoftPhoneProps,
+  SoftPhoneState,
+} from './types';
 
 const flowRoute = new CallsFlowControl();
 
@@ -141,7 +148,7 @@ const TextForm = styled('div')({
 });
 
 // Launcher styles
-const LauncherFab = styled(Fab)(({ theme, position, size }) => {
+const LauncherFab = styled(Fab)<{ position: LauncherPosition; size: LauncherSize }>(({ theme, position, size }) => {
   const positions = {
     'bottom-right': { bottom: 24, right: 24 },
     'bottom-left': { bottom: 24, left: 24 },
@@ -169,15 +176,15 @@ const LauncherFab = styled(Fab)(({ theme, position, size }) => {
 
 function SoftPhone({ 
   timelocale,
-  setConnectOnStartToLocalStorage,
+  setConnectOnStartToLocalStorage = () => {},
   connectOnStart,
   asteriskAccounts,
-  setNotifications,
+  setNotifications = () => {},
   notifications,
-  setCallVolume,
-  setRingVolume,
+  setCallVolume = () => {},
+  setRingVolume = () => {},
   softPhoneOpen,
-  setSoftPhoneOpen,
+  setSoftPhoneOpen = () => {},
   callVolume,
   ringVolume,
   config,
@@ -185,14 +192,14 @@ function SoftPhone({
   launcherPosition = 'bottom-right',
   launcherSize = 'medium',
   launcherColor = 'primary',
-}) {
-  const player = useRef(null);
-  const ringer = useRef(null);
-  
+}: SoftPhoneProps) {
+  const player = useRef<HTMLAudioElement | null>(null);
+  const ringer = useRef<HTMLAudioElement | null>(null);
+
   // Built-in launcher state
   const [launcherOpen, setLauncherOpen] = useState(false);
 
-  const defaultSoftPhoneState = {
+  const defaultSoftPhoneState: SoftPhoneState = {
     displayCalls: [
       {
         id: 0,
@@ -250,7 +257,6 @@ function SoftPhone({
         callInfo: 'Ready',
         inTransfer: false,
         inAnswerTransfer: false,
-        Transfer: false,
         allowTransfer: true,
         transferControl: false,
         allowAttendedTransfer: true,
@@ -262,8 +268,8 @@ function SoftPhone({
         sessionId: ''
       }
     ],
-    connectOnStart: connectOnStart,
-    notifications,
+    connectOnStart: connectOnStart as boolean,
+    notifications: notifications as boolean,
     phoneCalls: [],
     connectedPhone: false,
     connectingPhone: false,
@@ -276,17 +282,17 @@ function SoftPhone({
   const [drawerOpen, drawerSetOpen] = useState(softPhoneOpen);
   const [dialState, setDialState] = useState('');
   const [activeChannel, setActiveChannel] = useState(0);
-  const [localStatePhone, setLocalStatePhone] = useState(defaultSoftPhoneState);
-  const [notificationState, setNotificationState] = useState({ open: false, message: '' });
-  const [calls, setCalls] = useState([]);
-  
+  const [localStatePhone, setLocalStatePhone] = useState<SoftPhoneState>(defaultSoftPhoneState);
+  const [notificationState, setNotificationState] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
+  const [calls, setCalls] = useState<CallLogEntry[]>([]);
+
   // Keep drawerOpen in sync with softPhoneOpen prop
   useEffect(() => {
-    drawerSetOpen(softPhoneOpen);
+    drawerSetOpen(softPhoneOpen as boolean);
   }, [softPhoneOpen]);
   
   
-  const notify = (message) => {
+  const notify = (message: string) => {
     // Safely update notification state
     if (message) {
       setNotificationState({ open: true, message });
@@ -304,7 +310,7 @@ function SoftPhone({
     }
   };
   
-  const handleClose = (event, reason) => {
+  const handleClose = (_event: unknown, reason?: string) => {
     if (reason === 'clickaway') {
       return;
     }
@@ -316,7 +322,7 @@ function SoftPhone({
   if (flowRoute) {
     flowRoute.activeChanel = localStatePhone.displayCalls[activeChannel];
     flowRoute.connectedPhone = localStatePhone.connectedPhone;
-    flowRoute.engineEvent = (event, payload) => {
+    flowRoute.engineEvent = (event: string, payload: any) => {
     // Listen Here for Engine "UA jssip" events
     switch (event) {
       case 'connecting':
@@ -359,7 +365,7 @@ function SoftPhone({
   };
 
   // Not currently used but kept for potential future use
-  const _getStatusDetails = (state) => {
+  const _getStatusDetails = (state: string) => {
     switch (state) {
       case 'connected':
         return { color: 'primary', label: 'Connected', icon: <PhoneIcon fontSize="small" /> };
@@ -378,7 +384,7 @@ function SoftPhone({
   }
 
   if (flowRoute) {
-    flowRoute.onCallActionConnection = async (type, payload, data) => {
+    flowRoute.onCallActionConnection = async (type: string, payload: any, data: any) => {
     switch (type) {
       case 'reinvite':
         // looks like its Attended Transfer
@@ -556,8 +562,8 @@ function SoftPhone({
         let acceptedCall = localStatePhone.phoneCalls.filter((item) => item.sessionId === payload);
 
         if (!acceptedCall[0]) {
-          acceptedCall = localStatePhone.displayCalls.filter((item) => item.sessionId === payload);
-          displayCallId = acceptedCall[0].id;
+          acceptedCall = localStatePhone.displayCalls.filter((item) => item.sessionId === payload) as unknown as typeof acceptedCall;
+          displayCallId = (acceptedCall[0] as any).id;
         }
 
         // Call is Established
@@ -634,7 +640,7 @@ function SoftPhone({
     };
   }
 
-  const handleSettingsSlider = (name, newValue) => {
+  const handleSettingsSlider = (name: string, newValue: number) => {
     // Ensure we have a valid number between 0 and 1
     const safeValue = typeof newValue === 'number' && !Number.isNaN(newValue) ? 
       Math.max(0, Math.min(1, newValue)) : 0;
@@ -667,7 +673,7 @@ function SoftPhone({
         break;
     }
   };
-  const handleConnectPhone = (event, connectionStatus) => {
+  const handleConnectPhone = (event: any, connectionStatus: boolean) => {
     try {
       if (event) {
         event.persist();
@@ -695,18 +701,18 @@ function SoftPhone({
 
     return true;
   };
-  const toggleDrawer = (openDrawer) => (event) => {
+  const toggleDrawer = (openDrawer: boolean) => (event: any) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
     setSoftPhoneOpen(openDrawer);
     drawerSetOpen(openDrawer);
   };
-  const handleDialStateChange = (event) => {
+  const handleDialStateChange = (event: any) => {
     event.persist();
     setDialState(event.target.value);
   };
-  const handleConnectOnStart = (event,newValue) => {
+  const handleConnectOnStart = (event: any, newValue: boolean) => {
     event.persist();
     setLocalStatePhone((prevState) => ({
       ...prevState,
@@ -715,7 +721,7 @@ function SoftPhone({
 
     setConnectOnStartToLocalStorage(newValue);
   };
-  const handleNotifications = (event, newValue) => {
+  const handleNotifications = (event: any, newValue: boolean) => {
     event.persist();
     setLocalStatePhone((prevState) => ({
       ...prevState,
@@ -727,12 +733,12 @@ function SoftPhone({
       requestNotificationPermission();
     }
   };
-  const handlePressKey = (event) => {
+  const handlePressKey = (event: any) => {
     event.persist();
     setDialState(dialState + event.currentTarget.value);
   };
 
-  const handleCall = (event) => {
+  const handleCall = (event?: any) => {
     if (event && typeof event.persist === 'function') {
       event.persist();
     }
@@ -750,13 +756,13 @@ function SoftPhone({
     flowRoute.call(dialState);
   };
 
-  const handleEndCall = (event) => {
+  const handleEndCall = (event: any) => {
     event.persist();
     if (flowRoute) {
       flowRoute.hungup(localStatePhone.displayCalls[activeChannel].sessionId);
     }
   };
-  const handleHold = (sessionId, hold) => {
+  const handleHold = (sessionId: string, hold: boolean) => {
     if (!flowRoute) return;
     if (hold === false) {
       flowRoute.hold(sessionId);
@@ -764,12 +770,12 @@ function SoftPhone({
       flowRoute.unhold(sessionId);
     }
   };
-  const handleAnswer = (event) => {
+  const handleAnswer = (event: any) => {
     if (flowRoute) {
       flowRoute.answer(event.currentTarget.value);
     }
   };
-  const handleReject = (event) => {
+  const handleReject = (event: any) => {
     if (flowRoute) {
       flowRoute.hungup(event.currentTarget.value);
     }
@@ -780,7 +786,7 @@ function SoftPhone({
     }
   };
 
-  const handleCallTransfer = (transferedNumber) => {
+  const handleCallTransfer = (transferedNumber?: string) => {
     if (!dialState && !transferedNumber) return;
     const newCallTransferDisplayCalls = _.map(
       localStatePhone.displayCalls, (a) => (a.id === activeChannel ? {
@@ -802,7 +808,7 @@ function SoftPhone({
     }
   };
 
-  const handleCallAttendedTransfer = (event, number) => {
+  const handleCallAttendedTransfer = (event: string, number?: unknown) => {
     switch (event) {
       case 'transfer':
         setLocalStatePhone((prevState) => ({
@@ -880,14 +886,14 @@ function SoftPhone({
     }
   };
 
-  const handleDarkMode = (checked) => {
+  const handleDarkMode = (checked: boolean) => {
     setLocalStatePhone({
       ...localStatePhone,
       darkMode: checked
     });
   };
 
-  const handleUserPresence = (status) => {
+  const handleUserPresence = (status: string) => {
     setLocalStatePhone({
       ...localStatePhone,
       userPresence: status
@@ -898,7 +904,7 @@ function SoftPhone({
     if (flowRoute) {
       flowRoute.config = {
         ...config,
-        sockets: new WebSocketInterface(config.ws_servers)
+        sockets: new WebSocketInterface(config.ws_servers as string)
       };
       flowRoute.init();
       if (localStatePhone.connectOnStart) {
@@ -907,23 +913,23 @@ function SoftPhone({
     }
 
     try {
-      player.current.defaultMuted = false;
-      player.current.autoplay = true;
+      player.current!.defaultMuted = false;
+      player.current!.autoplay = true;
       
       // Set volume safely with validation
       const safeCallVolume = typeof localStatePhone.callVolume === 'number' && !Number.isNaN(localStatePhone.callVolume) ? 
         Math.max(0, Math.min(1, localStatePhone.callVolume)) : 0.5;
-      player.current.volume = safeCallVolume;
+      player.current!.volume = safeCallVolume;
       
       if (flowRoute) {
         flowRoute.player = player;
       }
-      ringer.current.src = '/sound/ringing.ogg';
-      ringer.current.loop = true;
+      ringer.current!.src = '/sound/ringing.ogg';
+      ringer.current!.loop = true;
       
       const safeRingVolume = localStatePhone.ringVolume ? 
         Math.max(0, Math.min(1, localStatePhone.ringVolume)) : 0.5;
-      ringer.current.volume = safeRingVolume;
+      ringer.current!.volume = safeRingVolume;
       
       if (flowRoute) {
         flowRoute.ringer = ringer;
@@ -946,7 +952,7 @@ function SoftPhone({
       debugError('Media session error:', e);
     }
   }, []);
-  const dialNumberOnEnter = (event) => {
+  const dialNumberOnEnter = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
       handleCall(event);
     }
@@ -967,7 +973,7 @@ function SoftPhone({
       {/* Built-in Launcher Button */}
       {builtInLauncher && (
         <LauncherFab
-          color={launcherColor}
+          color={launcherColor as any}
           position={launcherPosition}
           size={launcherSize}
           onClick={handleLauncherToggle}
@@ -1061,7 +1067,7 @@ function SoftPhone({
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <PhoneIcon size={20} weight="bold" color="primary" />
+                      <PhoneIcon fontSize="small" color="primary" />
                     </InputAdornment>
                   ),
                   endAdornment: dialState && (
@@ -1072,7 +1078,7 @@ function SoftPhone({
                         edge="end"
                         aria-label="clear number"
                       >
-                        <XIcon size={16} />
+                        <XIcon fontSize="small" />
                       </IconButton>
                     </InputAdornment>
                   )
@@ -1111,7 +1117,7 @@ function SoftPhone({
                 handleNotifications={handleNotifications}
                 handleDarkMode={handleDarkMode}
                 calls={calls}
-                timelocale={timelocale}
+                timelocale={timelocale as string}
                 callVolume={callVolume}
               />
             </Box>
@@ -1141,3 +1147,15 @@ function SoftPhone({
 
 
 export default SoftPhone;
+
+export type {
+  SoftPhoneProps,
+  SoftPhoneConfig,
+  SoftPhoneState,
+  DisplayCall,
+  PhoneCall,
+  CallLogEntry,
+  AsteriskAccount,
+  LauncherPosition,
+  LauncherSize,
+} from './types';

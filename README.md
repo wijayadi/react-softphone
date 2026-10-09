@@ -370,6 +370,9 @@ This will show detailed logs for:
 
 ## 🔧 Development
 
+The component is written in TypeScript and bundled with Vite (library mode);
+type declarations are emitted to `dist/`.
+
 ```bash
 # Clone the repository
 git clone https://github.com/wijayadi/react-softphone.git
@@ -377,8 +380,17 @@ git clone https://github.com/wijayadi/react-softphone.git
 # Install dependencies
 npm install
 
-# Build the package
+# Build the package (JS bundles + .d.ts declarations)
 npm run build
+
+# Type-check only
+npm run typecheck
+
+# Start Storybook (component explorer)
+npm run storybook
+
+# Build the static Storybook
+npm run build-storybook
 
 # Create package
 npm pack
@@ -387,6 +399,9 @@ npm pack
 npm install ../react-softphone/react-softphone-*.tgz  
 
 ```
+
+All components under `src/` have a colocated `*.stories.tsx` file, so every
+component is browsable and testable in Storybook.
 
 ### End-to-end tests
 

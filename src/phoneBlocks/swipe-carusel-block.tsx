@@ -18,8 +18,23 @@ import { PhoneX as PhoneXIcon } from '@phosphor-icons/react/dist/ssr/PhoneX';
 import { DeviceMobile as DeviceMobileIcon } from '@phosphor-icons/react/dist/ssr/DeviceMobile';
 import { ArrowsClockwise as ArrowsClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowsClockwise';
 import { PauseCircle as PauseCircleIcon } from '@phosphor-icons/react/dist/ssr/PauseCircle';
+import type { SoftPhoneState } from '../types';
 
-function TabPanel(props) {
+export interface SwipeCaruselBlockProps {
+  localStatePhone: SoftPhoneState;
+  activeChannel: number;
+  setActiveChannel: (index: number) => void;
+  /** Accepted for interface compatibility; not used by this block. */
+  setLocalStatePhone?: (updater: unknown) => void;
+}
+
+type TabPanelProps = Omit<React.ComponentProps<typeof Typography>, 'children' | 'component' | 'ref'> & {
+  children?: React.ReactNode | (() => React.ReactNode);
+  value: number;
+  index: number;
+};
+
+function TabPanel(props: TabPanelProps) {
   const {
     children, value, index, ...other
   } = props;
@@ -38,24 +53,35 @@ function TabPanel(props) {
   );
 }
 
-function a11yProps(index) {
+function a11yProps(index: number) {
   return {
     id: `full-width-tab-${index}`,
     'aria-controls': `full-width-tabpanel-${index}`,
   };
 }
 
-// Custom SwipeableViews component to replace the deprecated library
-const MuiSwipeableViews = ({ 
-  index, 
-  onChangeIndex, 
-  children, 
+interface MuiSwipeableViewsProps {
+  index: number;
+  onChangeIndex?: (index: number) => void;
+  children?: React.ReactNode;
   // Unused parameters prefixed with underscore to satisfy linting
-  _animateHeight = false,
-  _resistance = true,
+  _animateHeight?: boolean;
+  _resistance?: boolean;
+  style?: React.CSSProperties;
+}
+
+// Custom SwipeableViews component to replace the deprecated library
+const MuiSwipeableViews = ({
+  index,
+  onChangeIndex,
+  children,
+  _animateHeight: _animateHeightProp = false,
+  _resistance: _resistanceProp = true,
   style = {}
-}) => {
-  const containerRef = useRef(null);
+}: MuiSwipeableViewsProps) => {
+  void _animateHeightProp;
+  void _resistanceProp;
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -64,7 +90,7 @@ const MuiSwipeableViews = ({
       if (childCount > 0 && index >= 0 && index < childCount) {
         const slideWidth = container.offsetWidth || 0;
         if (slideWidth === 0) return;
-        
+
         container.scrollTo({
           left: slideWidth * index,
           behavior: 'smooth'
@@ -73,7 +99,7 @@ const MuiSwipeableViews = ({
     }
   }, [index, children]);
 
-  const handleScroll = (e) => {
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (onChangeIndex && e?.currentTarget) {
       // Use requestAnimationFrame to avoid too many calls during scroll
       requestAnimationFrame(() => {
@@ -85,7 +111,7 @@ const MuiSwipeableViews = ({
 
         const scrollPosition = container.scrollLeft || 0;
         const newIndex = Math.round(scrollPosition / slideWidth);
-        
+
         // Only trigger change if the index actually changed and is valid
         if (newIndex !== index && newIndex >= 0 && newIndex < React.Children.count(children)) {
           onChangeIndex(newIndex);
@@ -103,7 +129,7 @@ const MuiSwipeableViews = ({
 
       const scrollPosition = container.scrollLeft || 0;
       const newIndex = Math.round(scrollPosition / slideWidth);
-      
+
       // Only trigger change if the index actually changed and is valid
       if (newIndex !== index && newIndex >= 0 && newIndex < React.Children.count(children)) {
         onChangeIndex(newIndex);
@@ -202,35 +228,29 @@ const CallInfoGrid = styled(Grid)(({ theme }) => ({
 
 // We're using the styled components already defined above
 
+interface DurationState {
+  callDuration: number;
+  callDurationIntrId: number;
+  callDurationActive: boolean;
+  ringDuration: number;
+  ringDurationIntrId: number;
+  ringDurationActive: boolean;
+}
+
+const emptyDuration = (): DurationState => ({
+  callDuration: 0,
+  callDurationIntrId: 0,
+  callDurationActive: false,
+  ringDuration: 0,
+  ringDurationIntrId: 0,
+  ringDurationActive: false
+});
+
 function SwipeCaruselBlock({
   localStatePhone, activeChannel, setActiveChannel
-}) {
-  const [durations, setDurations] = useState(
-    [{
-      callDuration: 0,
-      callDurationIntrId: 0,
-      callDurationActive: false,
-      ringDuration: 0,
-      ringDurationIntrId: 0,
-      ringDurationActive: false
-    },
-    {
-      callDuration: 0,
-      callDurationIntrId: 0,
-      callDurationActive: false,
-      ringDuration: 0,
-      ringDurationIntrId: 0,
-      ringDurationActive: false
-    },
-    {
-      callDuration: 0,
-      callDurationIntrId: 0,
-      callDurationActive: false,
-      ringDuration: 0,
-      ringDurationIntrId: 0,
-      ringDurationActive: false
-    }
-    ]
+}: SwipeCaruselBlockProps) {
+  const [durations, setDurations] = useState<DurationState[]>(
+    [emptyDuration(), emptyDuration(), emptyDuration()]
   );
   const { displayCalls } = localStatePhone;
   const ONE_SECOND = 1000;
@@ -241,35 +261,38 @@ function SwipeCaruselBlock({
       for (const [key, displayCall] of displayCalls.entries()) {
         if (displayCall.inCall) {
           if (!displayCall.inAnswer && !durations[key].ringDurationActive) {
-            setDurations((oldDurations) => ({
-              ...oldDurations,
-              [key]: {
-                ...oldDurations[key],
-                ringDuration: oldDurations[key].ringDuration + 1,
-              }
-            }));
+            setDurations((oldDurations) => {
+              const next = oldDurations.slice();
+              next[key] = {
+                ...next[key],
+                ringDuration: next[key].ringDuration + 1,
+              };
+              return next;
+            });
           } else if (displayCall.inAnswer && !durations[key].callDurationActive) {
-            setDurations((oldDurations) => ({
-              ...oldDurations,
-              [key]: {
-                ...oldDurations[key],
-                callDuration: oldDurations[key].callDuration + 1,
+            setDurations((oldDurations) => {
+              const next = oldDurations.slice();
+              next[key] = {
+                ...next[key],
+                callDuration: next[key].callDuration + 1,
                 ringDurationActive: false
-              }
-            }));
+              };
+              return next;
+            });
           }
         } else {
           if (durations[key].callDuration !== 0 || durations[key].ringDuration !== 0) {
-            setDurations((oldDurations) => ({
-              ...oldDurations,
-              [key]: {
-                ...oldDurations[key],
+            setDurations((oldDurations) => {
+              const next = oldDurations.slice();
+              next[key] = {
+                ...next[key],
                 callDuration: 0,
                 callDurationActive: false,
                 ringDuration: 0,
                 ringDurationActive: false
-              }
-            }));
+              };
+              return next;
+            });
           }
         }
       }
@@ -278,57 +301,12 @@ function SwipeCaruselBlock({
     return () => clearInterval(interval); // Cleanup on unmount
   }, [displayCalls, durations]);
 
-  const handleTabChangeIndex = (index) => {
+  const handleTabChangeIndex = (index: number) => {
     setActiveChannel(index);
   };
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveChannel(newValue);
   };
-
-/*
-  displayCalls.map((displayCall, key) => {
-    // if Call just started then increment duration every one second
-    if (displayCall.inCall === true) {
-      if (displayCall.inAnswer === false && durations[key].ringDurationActive === false) {
-        const intrs = setInterval(() => {
-          setDurations((oldDurations) => ({
-            ...oldDurations,
-            [key]: {
-              ...oldDurations[key],
-              ringDuration: oldDurations[key].ringDuration + 1,
-              ringDurationIntrId: intrs,
-    if (displayCall.inCall === false) {
-      if (durations[key].callDurationActive === true) {
-        clearInterval(durations[key].callDurationIntrId);
-
-        setDurations((oldDurations) => ({
-          ...oldDurations,
-          [key]: {
-            ...oldDurations[key],
-            callDuration: 0,
-            callDurationIntrId: 0,
-            callDurationActive: false,
-            ringDuration: 0
-          }
-        }));
-      }
-      if (durations[key].ringDurationActive === true) {
-        clearInterval(durations[key].ringDurationIntrId);
-
-        setDurations((oldDurations) => ({
-          ...oldDurations,
-          [key]: {
-            ...oldDurations[key],
-            ringDuration: 0,
-            ringDurationIntrId: 0,
-            ringDurationActive: false
-          }
-        }));
-      }
-    }
-    return true;
-  });
-*/
 
   return (
     <div>
@@ -363,7 +341,7 @@ function SwipeCaruselBlock({
                     return (
                        // Show hold Call info
                       <CallInfoCard elevation={1}>
-                        <Chip 
+                        <Chip
                           icon={<PauseCircleIcon size={16} />}
                           label="On Hold"
                           size="small"
@@ -371,7 +349,7 @@ function SwipeCaruselBlock({
                           variant="filled"
                           sx={{ mb: 1.5 }}
                         />
-                        
+
                         <CallInfoGrid container spacing={2}>
                           <Grid item xs={6}>
                             <StatusLabel>Status</StatusLabel>
@@ -379,7 +357,7 @@ function SwipeCaruselBlock({
                               {displayCall.callInfo}
                             </StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Direction</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -396,17 +374,17 @@ function SwipeCaruselBlock({
                               )}
                             </StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Ring Duration</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Call Duration</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].callDuration / 60).toString().padStart(2, '0')}:${(durations[key].callDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={12}>
                             <StatusLabel>Number</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -422,7 +400,7 @@ function SwipeCaruselBlock({
                     return (
                        // Show In Transfer info
                       <CallInfoCard elevation={1}>
-                        <Chip 
+                        <Chip
                           icon={<ArrowsClockwiseIcon size={16} />}
                           label="In Transfer"
                           size="small"
@@ -430,7 +408,7 @@ function SwipeCaruselBlock({
                           variant="filled"
                           sx={{ mb: 1.5 }}
                         />
-                        
+
                         <CallInfoGrid container spacing={2}>
                           <Grid item xs={6}>
                             <StatusLabel>Status</StatusLabel>
@@ -438,7 +416,7 @@ function SwipeCaruselBlock({
                               {displayCall.callInfo}
                             </StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Direction</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -455,17 +433,17 @@ function SwipeCaruselBlock({
                               )}
                             </StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Ring Duration</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Call Duration</StatusLabel>
                             <StatusValue>{`${Math.floor(durations[key].callDuration / 60).toString().padStart(2, '0')}:${(durations[key].callDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Number</StatusLabel>
                             <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -473,14 +451,14 @@ function SwipeCaruselBlock({
                               {displayCall.callNumber}
                             </StatusValue>
                           </Grid>
-                          
+
                           <Grid item xs={6}>
                             <StatusLabel>Transfer To</StatusLabel>
                             <StatusValue sx={{ color: 'primary.main' }}>
                               {displayCall.transferNumber}
                             </StatusValue>
                           </Grid>
-                          
+
                           {displayCall.attendedTransferOnline.length > 1 && !displayCall.inConference && (
                             <Grid item xs={12}>
                               <StatusLabel>Talking With</StatusLabel>
@@ -497,7 +475,7 @@ function SwipeCaruselBlock({
                   return (
                     // Show In Call info
                     <CallInfoCard elevation={1}>
-                      <Chip 
+                      <Chip
                         icon={<PhoneIcon size={16} />}
                         label="Active Call"
                         size="small"
@@ -505,7 +483,7 @@ function SwipeCaruselBlock({
                         variant="filled"
                         sx={{ mb: 1.5 }}
                       />
-                      
+
                       <CallInfoGrid container spacing={2}>
                         <Grid item xs={6}>
                           <StatusLabel>Status</StatusLabel>
@@ -513,7 +491,7 @@ function SwipeCaruselBlock({
                             {displayCall.callInfo}
                           </StatusValue>
                         </Grid>
-                        
+
                         <Grid item xs={6}>
                           <StatusLabel>Direction</StatusLabel>
                           <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -530,19 +508,19 @@ function SwipeCaruselBlock({
                             )}
                           </StatusValue>
                         </Grid>
-                        
+
                         <Grid item xs={6}>
                           <StatusLabel>Ring Duration</StatusLabel>
                           <StatusValue>{`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}</StatusValue>
                         </Grid>
-                        
+
                         <Grid item xs={6}>
                           <StatusLabel>Call Duration</StatusLabel>
                           <StatusValue sx={{ fontWeight: 'bold', color: 'success.main' }}>
                             {`${Math.floor(durations[key].callDuration / 60).toString().padStart(2, '0')}:${(durations[key].callDuration % 60).toString().padStart(2, '0')}`}
                           </StatusValue>
                         </Grid>
-                        
+
                         <Grid item xs={12}>
                           <StatusLabel>Number</StatusLabel>
                           <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -558,7 +536,7 @@ function SwipeCaruselBlock({
                 return (
                   // Show Calling/Ringing info
                   <CallInfoCard elevation={1}>
-                    <Chip 
+                    <Chip
                       icon={<PhoneXIcon size={16} />}
                       label="Ringing"
                       size="small"
@@ -566,7 +544,7 @@ function SwipeCaruselBlock({
                       variant="filled"
                       sx={{ mb: 1.5 }}
                     />
-                    
+
                     <CallInfoGrid container spacing={2}>
                       <Grid item xs={6}>
                         <StatusLabel>Status</StatusLabel>
@@ -574,7 +552,7 @@ function SwipeCaruselBlock({
                           {displayCall.callInfo}
                         </StatusValue>
                       </Grid>
-                      
+
                       <Grid item xs={6}>
                         <StatusLabel>Direction</StatusLabel>
                         <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -591,14 +569,14 @@ function SwipeCaruselBlock({
                           )}
                         </StatusValue>
                       </Grid>
-                      
+
                       <Grid item xs={6}>
                         <StatusLabel>Ring Duration</StatusLabel>
                         <StatusValue sx={{ color: 'warning.main', fontWeight: 'bold' }}>
                           {`${Math.floor(durations[key].ringDuration / 60).toString().padStart(2, '0')}:${(durations[key].ringDuration % 60).toString().padStart(2, '0')}`}
                         </StatusValue>
                       </Grid>
-                      
+
                       <Grid item xs={12}>
                         <StatusLabel>Number</StatusLabel>
                         <StatusValue sx={{ display: 'flex', alignItems: 'center' }}>
@@ -614,7 +592,7 @@ function SwipeCaruselBlock({
               return (
                 // Show Ready info
                 <CallInfoCard >
-                  <Chip 
+                  <Chip
                     icon={<DeviceMobileIcon size={16} />}
                     label="Ready"
                     size="small"
@@ -622,7 +600,7 @@ function SwipeCaruselBlock({
                     variant="filled"
                     sx={{ mb: 1.5 }}
                   />
-                  
+
                   <CallInfoGrid container spacing={2}>
                     <Grid item xs={12}>
                       <StatusLabel>Status</StatusLabel>

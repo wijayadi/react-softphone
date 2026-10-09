@@ -7,6 +7,11 @@ import {
   Loop as ConnectingIcon
 } from '@mui/icons-material';
 
+export interface StatusBlockProps {
+  connectingPhone?: boolean;
+  connectedPhone?: boolean;
+}
+
 const Root = styled('div')(({ theme: _theme }) => ({
   padding: _theme.spacing(1),
   backgroundColor: _theme.palette.background.paper,
@@ -69,10 +74,11 @@ const ConnectingChip = styled(Chip)(({ theme: _theme }) => ({
   }
 }));
 
-function StatusBlock({ connectingPhone, connectedPhone }) {
-  
+function StatusBlock({ connectingPhone, connectedPhone }: StatusBlockProps) {
   // Check if internet is available
-  const [internetConnected, setInternetConnected] = React.useState(navigator.onLine);
+  const [internetConnected, setInternetConnected] = React.useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  );
 
   // Monitor internet connection status
   React.useEffect(() => {
@@ -94,14 +100,14 @@ function StatusBlock({ connectingPhone, connectedPhone }) {
     if (!internetConnected) {
       return <OfflineChip icon={<OfflineIcon fontSize="small" />} label="Offline" />;
     }
-    
+
     // Only check actual softphone status if internet is available
     if (connectingPhone) {
-      return connectedPhone 
+      return connectedPhone
         ? <OfflineChip icon={<CircularProgress size={12} />} label="Disconnecting" />
         : <ConnectingChip icon={<ConnectingIcon fontSize="small" />} label="Connecting" />;
     }
-    
+
     return connectedPhone
       ? <OnlineChip icon={<OnlineIcon fontSize="small" />} label="Online" />
       : <OfflineChip icon={<OfflineIcon fontSize="small" />} label="Offline" />;

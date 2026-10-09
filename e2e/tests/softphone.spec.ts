@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseDialTarget } from '../../src/utils/dial.js';
+import { parseDialTarget } from '../../src/utils/dial';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fakeSipPath = path.join(here, '..', 'fake-sip.js');

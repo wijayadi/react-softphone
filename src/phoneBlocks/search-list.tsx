@@ -6,6 +6,15 @@ import {
 } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { green, red } from '@mui/material/colors';
+import type { AsteriskAccount } from '../types';
+
+export interface SearchListProps {
+  asteriskAccounts?: AsteriskAccount[];
+  onClickList: (value: string) => void;
+  ariaDescribedby?: string;
+  anchorEl: HTMLElement | null;
+  setAnchorEl: (element: HTMLElement | null) => void;
+}
 
 function SearchList({
   asteriskAccounts = [],
@@ -13,16 +22,16 @@ function SearchList({
   ariaDescribedby,
   anchorEl,
   setAnchorEl
-}) {
+}: SearchListProps) {
   const open = Boolean(anchorEl);
   const id = open ? `${ariaDescribedby}` : undefined;
   const handleClose = () => setAnchorEl(null);
-  const handleClick = (value) => {
+  const handleClick = (value: string) => {
     onClickList(value);
     setAnchorEl(null);
   };
 
-  
+
   return (
     <>
       { open ? (

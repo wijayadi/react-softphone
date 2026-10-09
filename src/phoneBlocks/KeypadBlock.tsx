@@ -7,15 +7,11 @@ import {
   Tooltip,
   styled,
   IconButton,
-  TextField,
-  Box,
-  Divider,
   Paper
 } from '@mui/material';
 import {
   Mic,
   MicOff,
-  Settings,
   Pause,
   Call,
   CallEnd,
@@ -24,22 +20,28 @@ import {
   PhoneForwarded,
   Cancel,
   SwapCalls,
-  CallMerge,
-  Call as CallIcon,
-  CallEnd as CallEndIcon,
-  Backspace as BackspaceIcon,
-  Mic as MicIcon,
-  MicOff as MicOffIcon,
-  Pause as PauseIcon,
-  Settings as SettingsIcon,
-  Send as TransferIcon,
-  VideoCall as VideoCallIcon,
-  RecordVoiceOver as RecordIcon,
-  PresentToAll as ScreenShareIcon,
-  Add as AddParticipantIcon
+  CallMerge
 } from '@mui/icons-material';
 
 import SearchList from './search-list';
+import type { AsteriskAccount, DisplayCall } from '../types';
+
+export interface KeypadBlockProps {
+  handleCallAttendedTransfer: (event: string, number?: unknown) => void;
+  handleCallTransfer: (number: string) => void;
+  handlePressKey?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  handleMicMute: () => void;
+  handleCall: (event?: unknown) => void;
+  handleEndCall: (event: unknown) => void;
+  activeChanel: DisplayCall;
+  keyVariant?: string;
+  handleHold: (sessionId: string, hold: boolean) => void;
+  asteriskAccounts?: AsteriskAccount[];
+  dialState: string;
+  setDialState: (value: string) => void;
+  /** Accepted for interface compatibility; not used by this block. */
+  handleSettingsButton?: () => void;
+}
 
 const Root = styled('div')(({ theme }) => ({
   paddingTop: theme.spacing(1),
@@ -77,24 +79,24 @@ const ActionFab = styled(Fab)(({ theme }) => ({
     }
   },
   '&.end-call': {
-    background: theme => theme.palette.error.main,
+    background: theme.palette.error.main,
     color: '#fff',
     '&:hover': {
-      background: theme => theme.palette.error.dark
+      background: theme.palette.error.dark
     }
   },
   '&.transfer': {
-    background: theme => theme.palette.warning.main,
+    background: theme.palette.warning.main,
     color: '#fff',
     '&:hover': {
-      background: theme => theme.palette.warning.dark
+      background: theme.palette.warning.dark
     }
   },
   '&.hold': {
-    background: theme => theme.palette.info.main,
+    background: theme.palette.info.main,
     color: '#fff',
     '&:hover': {
-      background: theme => theme.palette.info.dark
+      background: theme.palette.info.dark
     }
   },
   '&.unhold': {
@@ -133,12 +135,12 @@ const CallButton = styled(Fab)(({ theme }) => ({
 
 const EndCallButton = styled(Fab)(({ theme }) => ({
   color: 'white',
-  background: theme => theme.palette.error.main,
+  background: theme.palette.error.main,
   width: '40px',
   height: '40px',
   margin: theme.spacing(0.5),
   '&:hover': {
-    background: theme => theme.palette.error.dark
+    background: theme.palette.error.dark
   }
 }));
 
@@ -182,17 +184,17 @@ const ActionButton = styled(IconButton)(({ theme }) => ({
 function KeypadBlock({
   handleCallAttendedTransfer,
   handleCallTransfer,
-  handlePressKey,
+  handlePressKey: _handlePressKey,
   handleMicMute,
   handleCall,
   handleEndCall,
   activeChanel,
-  keyVariant = 'default',
+  keyVariant: _keyVariant = 'default',
   handleHold,
   asteriskAccounts = [],
   dialState,
   setDialState
-}) {
+}: KeypadBlockProps) {
   const {
     inCall,
     muted,
@@ -206,9 +208,14 @@ function KeypadBlock({
     allowTransfer,
     allowAttendedTransfer
   } = activeChanel;
-  const [anchorElTransfer, setAnchorElTransfer] = useState(null);
-  const [anchorElAttended, setAnchorElAttended] = useState(null);
-  const handleClickTransferCall = (event) => {
+  const [anchorElTransfer, setAnchorElTransfer] = useState<HTMLElement | null>(null);
+  const [anchorElAttended, setAnchorElAttended] = useState<HTMLElement | null>(null);
+  // Keep references defined for future use (originally present in this module).
+  void ActionButton;
+  void QuickActionsBar;
+  void CallButton;
+  void EndCallButton;
+  const handleClickTransferCall = (event: React.MouseEvent<HTMLElement>) => {
     if (dialState.match(/^[0-9]+$/) != null) {
       handleCallTransfer(dialState);
       setDialState('');
@@ -216,12 +223,12 @@ function KeypadBlock({
     }
     setAnchorElTransfer(event.currentTarget);
   };
-  const TransferListClick = (id) => {
+  const TransferListClick = (id: string) => {
     if (id) {
       handleCallTransfer(id);
     }
   };
-  const handleClickAttendedTransfer = (event) => {
+  const handleClickAttendedTransfer = (event: React.MouseEvent<HTMLElement>) => {
     if (dialState.match(/^[0-9]+$/) != null) {
       handleCallAttendedTransfer('transfer', {});
       setDialState('');
@@ -229,7 +236,7 @@ function KeypadBlock({
     }
     setAnchorElAttended(event.currentTarget);
   };
-  const AttendedTransferListClick = (id) => {
+  const AttendedTransferListClick = (id: string) => {
     if (id) {
       handleCallAttendedTransfer('transfer', id);
       setDialState('');
@@ -239,7 +246,7 @@ function KeypadBlock({
   return (
     <Root>
         <KeypadContainer>
-          
+
           <GridRaw container spacing={0}>
             <Grid item xs={3}>
               <Grid item xs={12}>
@@ -247,29 +254,29 @@ function KeypadBlock({
                   <div>
                     <FabStyled
                       disabled={!inCall}
-                      value={inCall}
+                      value={inCall as unknown as string}
                       size="small"
                       aria-label={muted ? 'unmute' : 'mute'}
                       onClick={handleMicMute}
                       sx={theme => ({
                         // Adaptive colors based on theme mode
-                        bgcolor: muted 
-                          ? (theme.palette.mode === 'dark' ? '#ff5252' : '#f44336') 
+                        bgcolor: muted
+                          ? (theme.palette.mode === 'dark' ? '#ff5252' : '#f44336')
                           : theme.palette.primary.main,
                         color: '#ffffff',
                         boxShadow: theme.palette.mode === 'dark' ? 5 : 3,
                         border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.15)' : 'none',
                         '&:hover': {
-                          bgcolor: muted 
-                            ? (theme.palette.mode === 'dark' ? '#ff1744' : '#d32f2f') 
+                          bgcolor: muted
+                            ? (theme.palette.mode === 'dark' ? '#ff1744' : '#d32f2f')
                             : theme.palette.primary.dark,
                         },
                         '&.Mui-disabled': {
-                          bgcolor: theme.palette.mode === 'dark' 
-                            ? 'rgba(255,255,255,0.12)' 
+                          bgcolor: theme.palette.mode === 'dark'
+                            ? 'rgba(255,255,255,0.12)'
                             : 'rgba(0,0,0,0.12)',
-                          color: theme.palette.mode === 'dark' 
-                            ? 'rgba(255,255,255,0.3)' 
+                          color: theme.palette.mode === 'dark'
+                            ? 'rgba(255,255,255,0.3)'
                             : 'rgba(0,0,0,0.26)'
                         }
                       })}
@@ -298,23 +305,23 @@ function KeypadBlock({
                     }}
                     sx={theme => ({
                       // Adaptive colors based on theme mode
-                      bgcolor: hold 
-                        ? '#3acd7e' 
+                      bgcolor: hold
+                        ? '#3acd7e'
                         : theme.palette.primary.main,
                       color: '#ffffff',
                       boxShadow: theme.palette.mode === 'dark' ? 5 : 3,
                       border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.15)' : 'none',
                       '&:hover': {
-                        bgcolor: hold 
-                          ? '#16b364' 
+                        bgcolor: hold
+                          ? '#16b364'
                           : theme.palette.primary.dark,
                       },
                       '&.Mui-disabled': {
-                        bgcolor: theme.palette.mode === 'dark' 
-                          ? 'rgba(255,255,255,0.12)' 
+                        bgcolor: theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.12)'
                           : 'rgba(0,0,0,0.12)',
-                        color: theme.palette.mode === 'dark' 
-                          ? 'rgba(255,255,255,0.3)' 
+                        color: theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.3)'
                           : 'rgba(0,0,0,0.26)'
                       }
                     })}
@@ -342,11 +349,11 @@ function KeypadBlock({
                         bgcolor: theme.palette.warning.dark,
                       },
                       '&.Mui-disabled': {
-                        bgcolor: theme.palette.mode === 'dark' 
-                          ? 'rgba(255,255,255,0.12)' 
+                        bgcolor: theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.12)'
                           : 'rgba(0,0,0,0.12)',
-                        color: theme.palette.mode === 'dark' 
-                          ? 'rgba(255,255,255,0.3)' 
+                        color: theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.3)'
                           : 'rgba(0,0,0,0.26)'
                       }
                     })}
@@ -381,11 +388,11 @@ function KeypadBlock({
                         bgcolor: theme.palette.mode === 'dark' ? '#7b1fa2' : '#6a1b9a',
                       },
                       '&.Mui-disabled': {
-                        bgcolor: theme.palette.mode === 'dark' 
-                          ? 'rgba(255,255,255,0.12)' 
+                        bgcolor: theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.12)'
                           : 'rgba(0,0,0,0.12)',
-                        color: theme.palette.mode === 'dark' 
-                          ? 'rgba(255,255,255,0.3)' 
+                        color: theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.3)'
                           : 'rgba(0,0,0,0.26)'
                       }
                     })}

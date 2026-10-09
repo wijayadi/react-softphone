@@ -16,9 +16,19 @@ export const DIAL_ERRORS = {
   INVALID_USER: 'invalid-user',
   MISSING_DOMAIN: 'missing-domain',
   INVALID_DOMAIN: 'invalid-domain',
-};
+} as const;
 
-const failure = (reason, user, domain) => ({
+export type DialError = (typeof DIAL_ERRORS)[keyof typeof DIAL_ERRORS];
+
+export interface DialTarget {
+  valid: boolean;
+  reason: string | null;
+  uri: string;
+  number: string;
+  domain: string;
+}
+
+const failure = (reason: string, user?: string, domain?: string): DialTarget => ({
   valid: false,
   reason,
   uri: '',
@@ -29,11 +39,13 @@ const failure = (reason, user, domain) => ({
 /**
  * Parse raw dialer input into a SIP URI.
  *
- * @param {string} rawInput - what the user typed (e.g. "1000@10.13.13.77").
- * @param {string} defaultDomain - domain to append when none is given.
- * @returns {{valid: boolean, reason: string|null, uri: string, number: string, domain: string}}
+ * @param rawInput - what the user typed (e.g. "1000@10.13.13.77").
+ * @param defaultDomain - domain to append when none is given.
  */
-export function parseDialTarget(rawInput, defaultDomain) {
+export function parseDialTarget(
+  rawInput: string,
+  defaultDomain?: string,
+): DialTarget {
   const input = typeof rawInput === 'string' ? rawInput.trim() : '';
   const fallbackDomain =
     typeof defaultDomain === 'string' ? defaultDomain.trim() : '';

@@ -17,7 +17,7 @@ the component **source** and dedupes React:
 
 ```js
 resolve: {
-  alias: { '@sengsara/react-softphone': path.resolve(dirname, '../../src/index.jsx') },
+  alias: { '@sengsara/react-softphone': path.resolve(dirname, '../../src/index.tsx') },
   dedupe: ['react', 'react-dom'],
 },
 optimizeDeps: { exclude: ['@sengsara/react-softphone'] },
@@ -73,7 +73,7 @@ pnpm build && pnpm preview
 
 ## How it works
 
-- `vite.config.js` – aliases `@sengsara/react-softphone` to `../../src/index.jsx`
+- `vite.config.js` – aliases `@sengsara/react-softphone` to `../../src/index.tsx`
   (the component source) and dedupes React, so dev/build always use the current
   component.
 - `src/App.jsx` – builds the SIP config from `import.meta.env`, keeps the

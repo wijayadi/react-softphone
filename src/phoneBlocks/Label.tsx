@@ -1,7 +1,18 @@
 import React from 'react';
 import { styled, alpha } from '@mui/material/styles';
 
-const LabelRoot = styled('span')(({ theme, color }) => ({
+export type LabelColor =
+  | 'primary'
+  | 'secondary'
+  | 'error'
+  | 'success'
+  | 'warning';
+
+export interface LabelProps extends React.HTMLAttributes<HTMLSpanElement> {
+  color?: LabelColor;
+}
+
+const LabelRoot = styled('span')<{ color?: LabelColor }>(({ theme, color }) => ({
   fontFamily: theme.typography.fontFamily,
   alignItems: 'center',
   borderRadius: 2,
@@ -40,7 +51,7 @@ const LabelRoot = styled('span')(({ theme, color }) => ({
   })
 }));
 
-function Label({ className, color = 'secondary', children, style, ...rest }) {
+function Label({ className, color = 'secondary', children, style, ...rest }: LabelProps) {
   return (
     <LabelRoot
       className={className}

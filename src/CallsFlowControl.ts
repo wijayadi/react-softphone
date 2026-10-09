@@ -2,9 +2,10 @@ import { UA, debug } from 'jssip';
 import _ from 'lodash';
 import { debugLog, debugError, debugWarn, logInfo, logWarn, logError, describeSipEvent } from './constants';
 import { parseDialTarget } from './utils/dial';
+import type { SipEventDescription } from './constants';
 
 // Map common SIP failure responses to actionable messages.
-const FRIENDLY_SIP_FAILURES = {
+const FRIENDLY_SIP_FAILURES: Record<number, string> = {
   400: 'the server rejected the request (400 Bad Request)',
   401: 'authentication required (401 Unauthorized)',
   403: 'forbidden by the server (403 Forbidden)',
@@ -19,7 +20,7 @@ const FRIENDLY_SIP_FAILURES = {
   603: 'call was declined (603 Declined)',
 };
 
-const friendlyFailure = (info) => {
+const friendlyFailure = (info: SipEventDescription): string => {
   if (info.cause === 'User Denied Media Access') {
     return 'microphone access was denied';
   }
@@ -31,10 +32,15 @@ const friendlyFailure = (info) => {
   return `${info.cause}${info.response ? ` (${info.response})` : ''}`;
 };
 
-function CallsFlowControl() {
+/**
+ * Internal JsSIP call flow controller. Not part of the package's public API;
+ * it is instantiated once (module scope) and driven by the `<SoftPhone />`
+ * component.
+ */
+function CallsFlowControl(this: any) {
   this.onUserAgentAction = () => {};
 
-  this.notify = (message) => {
+  this.notify = (message: string) => {
     this.onCallActionConnection('notify', message);
   };
   this.tmpEvent = () => {
@@ -55,13 +61,13 @@ function CallsFlowControl() {
       this.onCallActionConnection('mute', this.activeCall.id);
     }
   };
-  this.hold = (sessionId) => {
+  this.hold = (sessionId: string) => {
     // If there is an active call with id that is requested then fire hold
     if (this.activeCall.id === sessionId) {
       this.activeCall.hold();
     }
   };
-  this.unhold = (sessionId) => {
+  this.unhold = (sessionId: string) => {
     // If we dont have active call then unhold the the call with requested id
     if (!this.activeCall) {
       // Find the Requested call in hold calls array
@@ -91,7 +97,7 @@ function CallsFlowControl() {
     if (this.ringer && this.ringer.current) {
       try {
         this.ringer.current.currentTime = 0;
-        this.ringer.current.play().catch((err) => console.error('Ringtone play error:', err));
+        this.ringer.current.play().catch((err: unknown) => console.error('Ringtone play error:', err));
       } catch (err) {
         console.error('Failed to play ringtone:', err);
       }
@@ -106,7 +112,7 @@ function CallsFlowControl() {
     if (this.ringbackTone) {
       try {
         this.ringbackTone.currentTime = 0; // Reset to the start
-        this.ringbackTone.play().catch((err) => console.error('Ringback tone play error:', err));
+        this.ringbackTone.play().catch((err: unknown) => console.error('Ringback tone play error:', err));
       } catch (e) {
         console.error('Failed to play ringback tone:', e);
       }
@@ -124,29 +130,29 @@ function CallsFlowControl() {
     }
   };
 
-  this.removeCallFromQueue = (callId) => {
-    _.remove(this.callsQueue, (calls) => calls.id === callId);
+  this.removeCallFromQueue = (callId: string) => {
+    _.remove(this.callsQueue, (calls: { id: string }) => calls.id === callId);
   };
-  this.addCallToHoldQueue = (callId) => {
+  this.addCallToHoldQueue = (callId: string) => {
     if (this.activeCall.id === callId) {
       this.holdCallsQueue.push(this.activeCall);
     }
   };
-  this.removeCallFromActiveCall = (callId) => {
+  this.removeCallFromActiveCall = (callId: string) => {
     if (this.activeCall && callId === this.activeCall.id) {
       this.activeCall = null;
     }
   };
-  this.removeCallFromHoldQueue = (callId) => {
-    _.remove(this.holdCallsQueue, (calls) => calls.id === callId);
+  this.removeCallFromHoldQueue = (callId: string) => {
+    _.remove(this.holdCallsQueue, (calls: { id: string }) => calls.id === callId);
   };
   this.connectAudio = () => {
-    this.activeCall.connection.addEventListener('addstream', (event) => {
+    this.activeCall.connection.addEventListener('addstream', (event: { stream: MediaStream }) => {
       this.player.current.srcObject = event.stream;
     });
   };
 
-  this.sessionEvent = (type, data, cause, callId) => {
+  this.sessionEvent = (type: string, data: any, cause: unknown, callId: string) => {
     switch (type) {
       case 'terminated':
         debugLog(`Call ${callId} terminated`);
@@ -268,7 +274,7 @@ function CallsFlowControl() {
     }
   };
 
-  this.handleNewRTCSession = (rtcPayload) => {
+  this.handleNewRTCSession = (rtcPayload: { session: any }) => {
     const { session: call } = rtcPayload;
     if (call.direction === 'incoming') {
       this.callsQueue.push(call);
@@ -306,7 +312,7 @@ function CallsFlowControl() {
       'confirmed'
     ];
     _.forEach(defaultCallEventsToHandle, (eventType) => {
-      call.on(eventType, (data, cause) => {
+      call.on(eventType, (data: unknown, cause: unknown) => {
         this.sessionEvent(eventType, data, cause, call.id);
       });
     });
@@ -353,7 +359,7 @@ function CallsFlowControl() {
         'connecting'
       ];
       _.forEach(binds, (value) => {
-        this.phone.on(value, (e) => {
+        this.phone.on(value, (e: unknown) => {
           this.engineEvent(value, e);
         });
       });
@@ -363,7 +369,7 @@ function CallsFlowControl() {
     }
   };
 
-  this.call = (to) => {
+  this.call = (to: string) => {
     const target = parseDialTarget(to, this.config.domain);
     logInfo('call() requested', { input: to, target });
 
@@ -399,11 +405,11 @@ function CallsFlowControl() {
       });
     } catch (error) {
       logError('phone.call() threw an error', error);
-      this.notify(`Failed to start call: ${(error && error.message) || error}`);
+      this.notify(`Failed to start call: ${(error && (error as Error).message) || error}`);
     }
   };
 
-  this.answer = (sessionId) => {
+  this.answer = (sessionId: string) => {
     if (this.activeCall) {
       console.log('Already has active call');
       return;
@@ -424,7 +430,7 @@ function CallsFlowControl() {
     }
   };
 
-  this.hungup = (e) => {
+  this.hungup = (e: string) => {
     try {
       this.phone._sessions[e].terminate();
     } catch (s) {
@@ -450,7 +456,7 @@ function CallsFlowControl() {
       this.phone.start();
     } catch (error) {
       logError('Failed to start JsSIP UA', error);
-      this.notify(`Failed to connect: ${(error && error.message) || error}`);
+      this.notify(`Failed to connect: ${(error && (error as Error).message) || error}`);
     }
   };
 
