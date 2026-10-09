@@ -26,6 +26,11 @@ export interface SwipeCaruselBlockProps {
   setActiveChannel: (index: number) => void;
   /** Accepted for interface compatibility; not used by this block. */
   setLocalStatePhone?: (updater: unknown) => void;
+  /**
+   * When provided (e.g. from the shared store) durations are rendered from this
+   * value instead of the block's internal ticker, so mirrored views stay in sync.
+   */
+  durations?: DurationState[];
 }
 
 type TabPanelProps = Omit<React.ComponentProps<typeof Typography>, 'children' | 'component' | 'ref'> & {
@@ -247,21 +252,24 @@ const emptyDuration = (): DurationState => ({
 });
 
 function SwipeCaruselBlock({
-  localStatePhone, activeChannel, setActiveChannel
+  localStatePhone, activeChannel, setActiveChannel, durations: durationsProp
 }: SwipeCaruselBlockProps) {
-  const [durations, setDurations] = useState<DurationState[]>(
+  const [internalDurations, setInternalDurations] = useState<DurationState[]>(
     [emptyDuration(), emptyDuration(), emptyDuration()]
   );
+  const durations = durationsProp ?? internalDurations;
   const { displayCalls } = localStatePhone;
   const ONE_SECOND = 1000;
 
   useEffect(() => {
+    // When the store owns the durations, the block is purely presentational.
+    if (durationsProp) return undefined;
     const interval = setInterval(() => {
       // Converting forEach to for...of loop for better performance and to fix lint issues
       for (const [key, displayCall] of displayCalls.entries()) {
         if (displayCall.inCall) {
-          if (!displayCall.inAnswer && !durations[key].ringDurationActive) {
-            setDurations((oldDurations) => {
+          if (!displayCall.inAnswer && !internalDurations[key].ringDurationActive) {
+            setInternalDurations((oldDurations) => {
               const next = oldDurations.slice();
               next[key] = {
                 ...next[key],
@@ -269,8 +277,8 @@ function SwipeCaruselBlock({
               };
               return next;
             });
-          } else if (displayCall.inAnswer && !durations[key].callDurationActive) {
-            setDurations((oldDurations) => {
+          } else if (displayCall.inAnswer && !internalDurations[key].callDurationActive) {
+            setInternalDurations((oldDurations) => {
               const next = oldDurations.slice();
               next[key] = {
                 ...next[key],
@@ -281,8 +289,8 @@ function SwipeCaruselBlock({
             });
           }
         } else {
-          if (durations[key].callDuration !== 0 || durations[key].ringDuration !== 0) {
-            setDurations((oldDurations) => {
+          if (internalDurations[key].callDuration !== 0 || internalDurations[key].ringDuration !== 0) {
+            setInternalDurations((oldDurations) => {
               const next = oldDurations.slice();
               next[key] = {
                 ...next[key],
@@ -299,7 +307,7 @@ function SwipeCaruselBlock({
     }, ONE_SECOND);
 
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [displayCalls, durations]);
+  }, [displayCalls, internalDurations, durationsProp]);
 
   const handleTabChangeIndex = (index: number) => {
     setActiveChannel(index);

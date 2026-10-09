@@ -1,5 +1,9 @@
-import { useCallback, useState } from 'react'
-import SoftPhone from '@sengsara/react-softphone'
+import { useCallback, useMemo, useState } from 'react'
+import SoftPhone, {
+  SoftPhonePanel,
+  SoftphoneProvider,
+  createSoftphoneStore,
+} from '@sengsara/react-softphone'
 import './App.css'
 
 /**
@@ -46,8 +50,49 @@ const sipConfig = {
   session_timers_refresh_method: 'invite',
 }
 
+const panelStyle = {
+  width: 340,
+  height: 640,
+  display: 'flex',
+  flexDirection: 'column',
+  border: '1px solid rgba(0,0,0,0.12)',
+  borderRadius: 8,
+  overflow: 'hidden',
+}
+
+/**
+ * Two views bound to ONE zustand store: any change (dialer, tabs, call,
+ * connection) is mirrored across both panels.
+ */
+function MirrorDemo() {
+  const store = useMemo(
+    () =>
+      createSoftphoneStore({
+        config: sipConfig,
+        connectOnStart: false,
+        notifications: false,
+        timelocale: 'UTC',
+      }),
+    [],
+  )
+
+  return (
+    <SoftphoneProvider store={store}>
+      <div style={{ display: 'flex', gap: 16, padding: 16 }}>
+        <div style={panelStyle}>
+          <SoftPhonePanel inputId="mirror-a" />
+        </div>
+        <div style={panelStyle}>
+          <SoftPhonePanel inputId="mirror-b" />
+        </div>
+      </div>
+    </SoftphoneProvider>
+  )
+}
+
 function App() {
   const [softPhoneOpen, setSoftPhoneOpen] = useState(false)
+  const [showMirror, setShowMirror] = useState(false)
 
   const [callVolume, setCallVolume] = usePersistentState(
     'softphone-call-volume',
@@ -89,6 +134,16 @@ function App() {
         >
           📞 Open Softphone
         </button>
+
+        <button
+          type="button"
+          className="open-button"
+          onClick={() => setShowMirror((value) => !value)}
+        >
+          {showMirror ? 'Hide' : 'Show'} shared-state mirror
+        </button>
+
+        {showMirror && <MirrorDemo />}
 
         <SoftPhone
           // Visibility control

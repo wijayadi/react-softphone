@@ -44,6 +44,10 @@ export interface SwipeCaruselBodyBlockProps {
   reconnecting?: boolean;
   /** Show the editable SIP account section. Default `true`. */
   showConfigEditor?: boolean;
+  /** Controlled bottom tab (0 = Settings, 1 = History). */
+  tabValue?: number;
+  /** Called when the bottom tab changes. */
+  onTabChange?: (index: number) => void;
 }
 
 type TabPanelProps = Omit<React.ComponentProps<typeof Typography>, 'children' | 'component' | 'ref'> & {
@@ -167,12 +171,16 @@ function SwipeCaruselBodyBlock({
   onConfigFieldChange,
   onReconnect,
   reconnecting,
-  showConfigEditor
+  showConfigEditor,
+  tabValue,
+  onTabChange
 }: SwipeCaruselBodyBlockProps) {
-  const [value, setValue] = useState(0);
+  const [internalValue, setInternalValue] = useState(0);
+  const value = tabValue ?? internalValue;
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+    setInternalValue(newValue);
+    onTabChange?.(newValue);
   };
 
   return (

@@ -255,9 +255,15 @@ window.__SOFTPHONE_DEBUG__ = true;
 
 ## 📋 Requirements
 
-### No Additional Dependencies Required
+### Peer Dependencies
 
-All dependencies are bundled with the package.
+React 18+ and `zustand` v5 are required (not bundled):
+
+```bash
+npm install zustand
+```
+
+All other dependencies (MUI, JsSIP, lodash, luxon) are bundled with the package.
 
 ## 🔧 Props Configuration
 
@@ -473,11 +479,69 @@ exercise prop variations. Coverage includes:
 - **`keypad.spec.ts`** – control enabled/disabled states, clearing the dialer,
   Enter-to-call, validation errors, mute, hang-up + call history, and online /
   offline status.
+- **`shared-state.spec.ts`** – two `SoftPhonePanel` views bound to one store
+  mirror the dialer, tabs, call state, and history.
 
 ```bash
 # Uses the locally installed Google Chrome (channel: 'chrome')
 npm run test:e2e
 ```
+
+## 🧩 Multiple Views & Shared State (zustand)
+
+All call logic and state live in a zustand store, so several views can share one
+softphone session. `<SoftPhone />` is just a shell (Provider + Drawer/launcher)
+around the inline `<SoftPhonePanel />` view.
+
+### Two mirrored panels
+
+```jsx
+import { useMemo } from 'react';
+import {
+  SoftPhonePanel,
+  SoftphoneProvider,
+  createSoftphoneStore,
+} from '@sengsara/react-softphone';
+
+function TwoSoftphones() {
+  const store = useMemo(
+    () => createSoftphoneStore({ config, connectOnStart: true }),
+    [],
+  );
+
+  return (
+    <SoftphoneProvider store={store}>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <SoftPhonePanel inputId="phone-a" />
+        <SoftPhonePanel inputId="phone-b" />
+      </div>
+    </SoftphoneProvider>
+  );
+}
+```
+
+Every change (dialer, channel/History tabs, active call, mute/hold, connection)
+is mirrored in both panels because they subscribe to the same store.
+
+### Store API
+
+| Export | Description |
+|--------|-------------|
+| `createSoftphoneStore(init)` | Create a session store (one JsSIP UA per store) |
+| `<SoftphoneProvider store? config? ...>` | Session host: owns the UA + audio elements; provides context |
+| `SoftPhonePanel` | Inline view (no Drawer); subscribe with selectors via hooks |
+| `useSoftphoneStore()` | Raw zustand store |
+| `useSoftphone(selector)` | Select a slice of state (use `useShallow` for objects) |
+| `SoftPhone` | Default export: unchanged single-instance Drawer + launcher shell |
+
+Existing single-component usage is unchanged:
+
+```jsx
+<SoftPhone config={config} connectOnStart />
+```
+
+Pass an existing `store` prop to bind additional views to a session managed by
+your own component tree.
 
 ## 📄 License
 

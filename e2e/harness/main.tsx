@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import SoftPhone from '../../src/index';
+import SoftPhonePanel from '../../src/SoftPhonePanel';
+import { SoftphoneProvider } from '../../src/store/context';
+import { createSoftphoneStore } from '../../src/store/createSoftphoneStore';
 import type { AsteriskAccount, SoftPhoneConfig } from '../../src/types';
 
 // Deterministic config for tests. The real WebSocket is replaced by e2e/fake-sip.js.
@@ -15,7 +18,7 @@ const config: SoftPhoneConfig = {
 };
 
 // Query-string switches so a single harness can cover the component's prop
-// variations (launcher, hidden config editor, offline mode, etc.).
+// variations (launcher, hidden config editor, offline mode, mirrored panels).
 const params = new URLSearchParams(window.location.search);
 const flag = (key: string, fallback: boolean): boolean => {
   const value = params.get(key);
@@ -29,6 +32,7 @@ const initial = {
   showConfigEditor: flag('showConfigEditor', true),
   connectOnStart: flag('connectOnStart', true),
   notifications: flag('notifications', false),
+  mirror: flag('mirror', false),
 };
 
 const sampleAccounts: AsteriskAccount[] = [
@@ -93,4 +97,38 @@ function Harness() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<Harness />);
+/**
+ * Two panels bound to one shared store: any state change (dialer, tabs, call,
+ * connection) is mirrored in both views.
+ */
+function MirrorHarness() {
+  const [store] = useState(() =>
+    createSoftphoneStore({
+      config,
+      connectOnStart: initial.connectOnStart,
+      notifications: initial.notifications,
+      timelocale: 'UTC',
+      showConfigEditor: initial.showConfigEditor,
+      asteriskAccounts: sampleAccounts,
+    }),
+  );
+
+  (window as unknown as { __test: Record<string, unknown> }).__test.store = store;
+
+  return (
+    <SoftphoneProvider store={store}>
+      <div style={{ display: 'flex', gap: 16, padding: 16 }}>
+        <div style={{ width: 340 }}>
+          <SoftPhonePanel inputId="phone-input-a" />
+        </div>
+        <div style={{ width: 340 }}>
+          <SoftPhonePanel inputId="phone-input-b" />
+        </div>
+      </div>
+    </SoftphoneProvider>
+  );
+}
+
+createRoot(document.getElementById('root')!).render(
+  initial.mirror ? <MirrorHarness /> : <Harness />,
+);

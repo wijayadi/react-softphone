@@ -485,6 +485,29 @@ function CallsFlowControl(this: any) {
     logInfo('Stopping JsSIP UA');
     this.phone.stop();
   };
+
+  // Tear down the UA and clear queues. Called when the owning session view
+  // unmounts so a new session can be created cleanly.
+  this.destroy = () => {
+    try {
+      if (this.phone) {
+        try {
+          this.phone.stop();
+        } catch (e) {
+          debugWarn('Error stopping JsSIP UA during destroy', e);
+        }
+      }
+    } catch (e) {
+      debugWarn('Error during JsSIP UA destroy', e);
+    }
+    this.phone = null;
+    this.initiated = false;
+    this.activeCall = null;
+    this.callsQueue = [];
+    this.holdCallsQueue = [];
+    this.micMuted = false;
+    this.mediaErrorNotified = false;
+  };
 }
 
 export default CallsFlowControl;

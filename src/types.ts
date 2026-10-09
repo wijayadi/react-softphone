@@ -2,6 +2,8 @@
 // and the shape of the internal call/state objects. They are exported so
 // TypeScript consumers can type their integration code.
 
+import type { SoftphoneStoreApi } from './store/types';
+
 export interface SoftPhoneConfig {
   /** SIP domain, e.g. `sip.example.com`. */
   domain: string;
@@ -148,4 +150,9 @@ export interface SoftPhoneProps {
   showConfigEditor?: boolean;
   /** Called with the new config after the user applies it via Reconnect. */
   onConfigChange?: (config: SoftPhoneConfig) => void;
+  /**
+   * Bind to an existing zustand store so multiple views share one session.
+   * When omitted, `<SoftPhone />` creates and owns a store for its lifetime.
+   */
+  store?: SoftphoneStoreApi;
 }

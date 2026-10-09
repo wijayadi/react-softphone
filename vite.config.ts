@@ -42,9 +42,16 @@ export default defineConfig({
       fileName: (format) => (format === 'es' ? 'index.es.js' : 'index.js')
     },
     rollupOptions: {
-      // Only React as external - bundle everything else including ALL MUI.
+      // React and zustand are peer dependencies; bundle everything else
+      // including ALL MUI.
       external: (id) =>
-        id === 'react' || id === 'react-dom' || id === 'react/jsx-runtime',
+        id === 'react' ||
+        id === 'react-dom' ||
+        id === 'react/jsx-runtime' ||
+        id === 'react/jsx-dev-runtime' ||
+        id === 'zustand' ||
+        id === 'zustand/vanilla' ||
+        id.startsWith('zustand/'),
       output: {
         exports: 'named',
         globals: {
