@@ -150,6 +150,8 @@ export interface SoftPhoneProps {
   showConfigEditor?: boolean;
   /** Called with the new config after the user applies it via Reconnect. */
   onConfigChange?: (config: SoftPhoneConfig) => void;
+  /** Called whenever a DTMF key is pressed on the dialer keypad. */
+  onDtmf?: (key: string) => void;
   /**
    * UI language. Supported: `en`, `id`, `jp`. Defaults to `en`.
    */

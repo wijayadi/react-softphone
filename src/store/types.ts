@@ -25,6 +25,7 @@ export type SoftphoneInit = Pick<
   | 'assets'
   | 'lang'
   | 'onConfigChange'
+  | 'onDtmf'
   | 'setConnectOnStartToLocalStorage'
   | 'setNotifications'
   | 'setCallVolume'
@@ -112,6 +113,8 @@ export interface SoftphoneStoreActions {
   answer(sessionId: string): void;
   reject(sessionId: string): void;
   toggleMicMute(): void;
+  /** Send a DTMF tone (0-9, *, #) on the active call. */
+  sendDtmf(key: string): void;
   transfer(number?: string): void;
   attendedTransfer(type: string, number?: unknown): void;
 }

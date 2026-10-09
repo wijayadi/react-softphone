@@ -11,6 +11,7 @@ import { styled } from '@mui/material/styles';
 import { Phone as PhoneIcon, Clear as XIcon } from '@mui/icons-material';
 import CallQueue from './phoneBlocks/call-queue';
 import KeypadBlock from './phoneBlocks/KeypadBlock';
+import DtmfKeypad from './phoneBlocks/DtmfKeypad';
 import SwipeCaruselBlock from './phoneBlocks/swipe-carusel-block';
 import SwipeCaruselBodyBlock from './phoneBlocks/SwipeCaruselBodyBlock';
 import StatusBlock from './phoneBlocks/status-block';
@@ -160,6 +161,10 @@ export function SoftPhonePanel({ className, inputId = 'phone-input' }: SoftPhone
             setDialState={actions.setDial}
           />
         </Box>
+
+        {phoneState.displayCalls[activeChannel]?.inCall && (
+          <DtmfKeypad onKey={actions.sendDtmf} />
+        )}
       </Box>
 
       <Box sx={{ overflow: 'auto' }}>

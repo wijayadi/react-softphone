@@ -298,6 +298,7 @@ package. All other dependencies (MUI, JsSIP, lodash, luxon) are bundled.
 | `assets` | Object | `undefined` | Override media asset URLs (see below) |
 | `showConfigEditor` | Boolean | `true` | Show the editable SIP account section in Settings |
 | `onConfigChange` | Function | `undefined` | Called with the new config after the user clicks Reconnect |
+| `onDtmf` | Function | `undefined` | Called with the key (`0-9`, `*`, `#`) when a DTMF key is pressed |
 | `lang` | String | `'en'` | UI language: `en`, `id`, or `jp` |
 | `store` | Store | `undefined` | Bind to an existing zustand store (shared state) |
 
@@ -401,8 +402,24 @@ The audio files and notification icon can be overridden with the optional
 - **Attended Transfer** - Talk to transfer target before completing
 - **Conference** - Merge multiple calls into conference
 - **Mute/Unmute** - Control microphone during calls
+- **DTMF Keypad** - Send `0-9`, `*`, `#` tones during a call
 - **Call History** - View recent call history with timestamps
 - **Volume Control** - Separate controls for call and ring volume
+
+### DTMF Keypad
+
+While a call is active, a `1-9`, `*`, `0`, `#` keypad appears under the call
+controls. Pressing a key sends the tone on the active JsSIP session via
+`sendDTMF` and fires the optional `onDtmf` callback:
+
+```jsx
+<SoftPhone
+  config={config}
+  onDtmf={(key) => console.log('DTMF', key)}
+/>
+```
+
+The same action is available on the store as `store.getState().sendDtmf(key)`.
 
 ## 🌐 Browser Support
 

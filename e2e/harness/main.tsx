@@ -51,6 +51,7 @@ const sampleAccounts: AsteriskAccount[] = [
   callVolume: 0.5,
   ringVolume: 0.5,
   lang: initial.lang,
+  dtmf: [],
 };
 
 function Harness() {
@@ -91,6 +92,9 @@ function Harness() {
       onConfigChange={(next) => {
         ((window as unknown as { __test: { configChanges: SoftPhoneConfig[] } }).__test.configChanges).push(next);
       }}
+      onDtmf={(key) => {
+        ((window as unknown as { __test: { dtmf: string[] } }).__test.dtmf).push(key);
+      }}
       builtInLauncher={initial.builtInLauncher}
       showConfigEditor={initial.showConfigEditor}
       asteriskAccounts={sampleAccounts}
@@ -114,6 +118,9 @@ function MirrorHarness() {
       showConfigEditor: initial.showConfigEditor,
       asteriskAccounts: sampleAccounts,
       lang: initial.lang,
+      onDtmf: (key: string) => {
+        ((window as unknown as { __test: { dtmf: string[] } }).__test.dtmf).push(key);
+      },
     }),
   );
 

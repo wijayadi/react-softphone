@@ -22,7 +22,8 @@ const meta = {
     setNotifications: noop,
     setCallVolume: noop,
     setRingVolume: noop,
-    onConfigChange: noop
+    onConfigChange: noop,
+    onDtmf: noop
   }
 } satisfies Meta<typeof SoftPhone>;
 

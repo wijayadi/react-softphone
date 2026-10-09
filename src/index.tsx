@@ -98,6 +98,7 @@ function SoftPhone({
   assets,
   showConfigEditor = true,
   onConfigChange,
+  onDtmf,
   lang,
   store: externalStore,
 }: SoftPhoneProps) {
@@ -116,6 +117,7 @@ function SoftPhone({
     assets,
     showConfigEditor,
     onConfigChange,
+    onDtmf,
     lang,
   };
 

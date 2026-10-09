@@ -678,6 +678,18 @@ export function createSoftphoneStore(init: SoftphoneInit): SoftphoneStoreApi {
       reject: (sessionId) => controller.hungup(sessionId),
       toggleMicMute: () => controller.setMicMuted(),
 
+      sendDtmf: (key) => {
+        const activeCall = controller.activeCall;
+        if (activeCall && typeof activeCall.sendDTMF === 'function') {
+          try {
+            activeCall.sendDTMF(key);
+          } catch (error) {
+            logError(`Failed to send DTMF "${key}"`, error);
+          }
+        }
+        get().props.onDtmf?.(key);
+      },
+
       transfer: (transferedNumber) => {
         const { dialState, phoneState, activeChannel } = get();
         if (!dialState && !transferedNumber) return;
